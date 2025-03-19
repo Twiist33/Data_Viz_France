@@ -82,7 +82,7 @@ with col2:
     st.download_button(
         label="Mon mémoire de M1",
         data=file_data,
-        file_name="Documentation_Stockage_donnees.ipynb",
+        file_name="Mémoire_Romain_Traboul.pdf",
         mime="application/pdf"
     )
     st.markdown("</div>", unsafe_allow_html=True)
