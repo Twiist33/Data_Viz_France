@@ -10,6 +10,8 @@ import streamlit as st
 import matplotlib.image as mpimg
 
 # Charger les  fichiers PDF présent à la fin de la page d'acceuil
+with open("Documentation/Documentation_Stockage_donnees.pdf", "rb") as file:
+    cv_data = file.read()
 with open("Mémoire/Mémoire_Romain_Traboul.pdf", "rb") as file:
     file_data = file.read()
 with open("CV/CV_FR_Romain_Traboul.pdf", "rb") as file:
@@ -52,7 +54,7 @@ st.markdown(
     <br>
     Pour plus de détails sur ce projet, vous avez à votre disposition :  
     <ul>
-        <li>Le read.me de l'application web et du stokage des données, détaillant chaque section</li>
+        <li>La documentation de la partie réservée au stockage des données</li>
         <li><a href="https://github.com/Twiist33/Data_Viz_France">Le code associé à la création de l'application</a></li>
         <li>Mon mémoire de M1 : Analyse comparative de 3 facteurs de performance dans le football : l'impact du 1er but, la distribution temporelle des buts et de l'influence de l'avantage du terrain sur le match (domicile/extérieur) entre les équipes de jeunes (U17N et U19N) réalisé dans le cadre de mon Master 1 Science du Numérique et Sport en 2023 à Rennes</li>    
         <li>Et enfin mon CV (en français et anglais).</li>
@@ -60,22 +62,33 @@ st.markdown(
     """, unsafe_allow_html=True
 )
 
-# Utilisation de st.columns pour afficher les 3 boutons côte à côte et centrés
-col1, col2, col3 = st.columns([1, 1, 1])
+# Utilisation de st.columns pour afficher les 4 boutons côte à côte et centrés
+col1, col2, col3, col4 = st.columns([1, 1, 1, 1])
 
 # Utilisation du 1er bouton pour télécharger le mémoire de M1
 with col1:
     st.markdown("<div style='text-align: center;'>", unsafe_allow_html=True)
     st.download_button(
-        label="Mon mémoire de M1",
+        label="Documentation",
         data=file_data,
-        file_name="Mémoire_Romain_Traboul.pdf",
+        file_name="Documentation_Stockage_donnees.pdf",
         mime="application/pdf"
     )
     st.markdown("</div>", unsafe_allow_html=True)
 
-# Utilisation du 2ème bouton pour télécharger le CV en français
+# Utilisation du 2ème bouton pour télécharger le mémoire de M1
 with col2:
+    st.markdown("<div style='text-align: center;'>", unsafe_allow_html=True)
+    st.download_button(
+        label="Mon mémoire de M1",
+        data=file_data,
+        file_name="Documentation_Stockage_donnees.ipynb",
+        mime="application/pdf"
+    )
+    st.markdown("</div>", unsafe_allow_html=True)
+
+# Utilisation du 3ème bouton pour télécharger le CV en français
+with col3:
     st.markdown("<div style='text-align: center;'>", unsafe_allow_html=True)
     st.download_button(
         label="Mon CV en français",
@@ -85,8 +98,8 @@ with col2:
     )
     st.markdown("</div>", unsafe_allow_html=True)
 
-# Utilisation du 3ème bouton pour télécharger le CV en anglais
-with col3:
+# Utilisation du 4ème bouton pour télécharger le CV en anglais
+with col4:
     st.markdown("<div style='text-align: center;'>", unsafe_allow_html=True)
     st.download_button(
         label="Mon CV en anglais",
