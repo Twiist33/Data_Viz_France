@@ -1,7 +1,6 @@
 # Import des librairies
 import streamlit as st
 import os
-import psycopg2
 import pandas as pd
 import matplotlib.pyplot as plt
 import plotly.graph_objects as go
@@ -146,7 +145,7 @@ if competition_available:
                 max_avg_goals = df_goals["Buts/Match"].max()
                 max_home_goals = df_goals["Buts Domicile"].max()
                 max_away_goals = df_goals["Buts Extérieur"].max()
-                
+
                 selected_data = df_goals[df_goals["Compétition"] == selected_competition] # Récupération des valeurs de la compétition sélectionnée
 
                 if not selected_data.empty:

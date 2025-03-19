@@ -10,11 +10,11 @@ import streamlit as st
 import matplotlib.image as mpimg
 
 # Charger les  fichiers PDF présent à la fin de la page d'acceuil
-with open("../Mémoire/Mémoire_Romain_Traboul.pdf", "rb") as file:
+with open("Mémoire/Mémoire_Romain_Traboul.pdf", "rb") as file:
     file_data = file.read()
-with open("../CV/CV_FR_Romain_Traboul.pdf", "rb") as file:
+with open("CV/CV_FR_Romain_Traboul.pdf", "rb") as file:
     cv_data = file.read()
-with open("../CV/CV_ENG_Romain_Traboul.pdf", "rb") as file:
+with open("CV/CV_ENG_Romain_Traboul.pdf", "rb") as file:
     cv_data = file.read()
 
 # Affichage du titre et du logo de l'application web
@@ -53,7 +53,7 @@ st.markdown(
     Pour plus de détails sur ce projet, vous avez à votre disposition :  
     <ul>
         <li>Le read.me de l'application web et du stokage des données, détaillant chaque section</li>
-        <li><a href="https://github.com/Twiist33">Le code associé à la création de l'application, ainsi que du stockage des données</a></li>
+        <li><a href="https://github.com/Twiist33/Data_Viz_France">Le code associé à la création de l'application</a></li>
         <li>Mon mémoire de M1 : Analyse comparative de 3 facteurs de performance dans le football : l'impact du 1er but, la distribution temporelle des buts et de l'influence de l'avantage du terrain sur le match (domicile/extérieur) entre les équipes de jeunes (U17N et U19N) réalisé dans le cadre de mon Master 1 Science du Numérique et Sport en 2023 à Rennes</li>    
         <li>Et enfin mon CV (en français et anglais).</li>
         </ul>

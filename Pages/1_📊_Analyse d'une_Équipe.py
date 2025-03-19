@@ -1,7 +1,6 @@
 # Import des libraries
 import streamlit as st
 import os
-import psycopg2
 import pandas as pd
 import matplotlib.pyplot as plt
 import plotly.graph_objects as go
