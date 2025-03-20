@@ -10,7 +10,7 @@ import streamlit as st
 import matplotlib.image as mpimg
 
 # Charger les  fichiers PDF présent à la fin de la page d'acceuil
-with open("Documentation/Documentation_Stockage_donnees.pdf", "rb") as file:
+with open("Documentation/Documentation_Data_Viz_France.pdff", "rb") as file:
     cv_data = file.read()
 with open("Mémoire/Mémoire_Romain_Traboul.pdf", "rb") as file:
     file_data = file.read()
@@ -54,7 +54,7 @@ st.markdown(
     <br>
     Pour plus de détails sur ce projet, vous avez à votre disposition :  
     <ul>
-        <li>La documentation de la partie réservée au stockage des données</li>
+        <li>La documentation du projet</li>
         <li><a href="https://github.com/Twiist33/Data_Viz_France">Le code associé à la création de l'application</a></li>
         <li>Mon mémoire de M1 : Analyse comparative de 3 facteurs de performance dans le football : l'impact du 1er but, la distribution temporelle des buts et de l'influence de l'avantage du terrain sur le match (domicile/extérieur) entre les équipes de jeunes (U17N et U19N) réalisé dans le cadre de mon Master 1 Science du Numérique et Sport en 2023 à Rennes</li>    
         <li>Et enfin mon CV (en français et anglais).</li>
@@ -71,7 +71,7 @@ with col1:
     st.download_button(
         label="Documentation",
         data=file_data,
-        file_name="Documentation_Stockage_donnees.pdf",
+        file_name="Documentation_Data_Viz_France.pdf",
         mime="application/pdf"
     )
     st.markdown("</div>", unsafe_allow_html=True)
