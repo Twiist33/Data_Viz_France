@@ -9,22 +9,36 @@ from supabase import create_client
 from dotenv import load_dotenv
 from decimal import Decimal
 
-
 st.set_page_config(page_title="Data Viz ⚽ 🇫🇷", page_icon="📊", layout="wide") # Affichage du titre et du logo et l'application web
 
-# Adapter les graphiques et les tableaux selon la taille de l'écran
 st.markdown("""
     <style>
+    /* Ajustement global des containers Streamlit pour s'adapter sur mobile */
     @media (max-width: 600px) {
-        .stPlotlyChart, .stDataFrame {
+        section.main > div {
+            max-width: 100% !important;
+            padding-left: 5px !important;
+            padding-right: 5px !important;
+        }
+        /* Correction spécifique pour les graphiques */
+        .element-container {
             width: 100% !important;
-            height: auto !important;
-            display: block;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        iframe {
+            width: 100% !important;
+        }
+        /* Correction pour les tableaux */
+        .stDataFrame {
             overflow-x: auto !important;
+            display: block;
         }
     }
     </style>
     """, unsafe_allow_html=True)
+
 load_dotenv() # Chargement des variables d'environnement
 
 # Connexion à la base de données Supabase
