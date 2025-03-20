@@ -11,34 +11,6 @@ from decimal import Decimal
 
 st.set_page_config(page_title="Data Viz ⚽ 🇫🇷", page_icon="📊", layout="wide") # Affichage du titre et du logo et l'application web
 
-st.markdown("""
-    <style>
-    /* Ajustement global des containers Streamlit pour s'adapter sur mobile */
-    @media (max-width: 600px) {
-        section.main > div {
-            max-width: 100% !important;
-            padding-left: 5px !important;
-            padding-right: 5px !important;
-        }
-        /* Correction spécifique pour les graphiques */
-        .element-container {
-            width: 100% !important;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-        iframe {
-            width: 100% !important;
-        }
-        /* Correction pour les tableaux */
-        .stDataFrame {
-            overflow-x: auto !important;
-            display: block;
-        }
-    }
-    </style>
-    """, unsafe_allow_html=True)
-
 load_dotenv() # Chargement des variables d'environnement
 
 # Connexion à la base de données Supabase
@@ -206,7 +178,7 @@ if competition_available:
                                 "bar": {"color": get_gauge_color(avg_goals, max_avg_goals)}
                             }
                         ))
-                        st.plotly_chart(fig1)
+                        st.plotly_chart(fig1, use_container_width=True)
 
                     with col2:
                         fig2 = go.Figure(go.Indicator(
@@ -218,7 +190,7 @@ if competition_available:
                                 "bar": {"color": get_gauge_color(avg_home_goals, max_home_goals)}
                             }
                         ))
-                        st.plotly_chart(fig2)
+                        st.plotly_chart(fig2, use_container_width=True)
 
                     with col3:
                         fig3 = go.Figure(go.Indicator(
@@ -230,7 +202,7 @@ if competition_available:
                                 "bar": {"color": get_gauge_color(avg_away_goals, max_away_goals)}
                             }
                         ))
-                        st.plotly_chart(fig3)
+                        st.plotly_chart(fig3, use_container_width=True)
 
             # Passage au tableau des scores fréquents (récupération des données)
             general_stats_data = get_frequent_score_by_competition(selected_competition)
@@ -251,7 +223,7 @@ if competition_available:
                 ax.set_title(f"Répartition des scores pour {selected_competition} (%)")
                 ax.set_xlabel("Score extérieur")
                 ax.set_ylabel("Score domicile")
-                st.pyplot(fig)
+                st.pyplot(fig, use_container_width=True)
 
         # Affichage des graphiques relatifs à la section 1er but inscrit
         elif section == "1er but inscrit":
@@ -296,7 +268,7 @@ if competition_available:
                     ax.pie(values, labels=["Victoire", "Match nul", "Défaite"], autopct='%1.2f%%', startangle=90, colors=colors)
                     ax.set_title(title)
 
-                st.pyplot(fig) # Affichage de la figure
+                st.pyplot(fig, use_container_width=True) # Affichage de la figure
 
         # Affichage des graphiques relatifs à la section Distribution des buts
         elif section == "Distribution des buts":
@@ -335,7 +307,7 @@ if competition_available:
                     yval = bar.get_height()  # Hauteur de chaque barre
                     axes[1].text(bar.get_x() + bar.get_width() / 2, yval + 1, f'{yval:.2f}%', ha='center', color='black')
 
-                st.pyplot(fig) # Affichage avec Streamlit
+                st.pyplot(fig, use_container_width=True) # Affichage avec Streamlit
 
         # Affichage des graphiques relatifs à la section Domicile / Extérieur 
         elif section == "Domicile / Extérieur":
@@ -368,7 +340,7 @@ if competition_available:
                         fig1, ax1 = plt.subplots(figsize=(7, 7))  
                         ax1.pie(values_proportion, labels=labels_proportion, autopct='%1.2f%%', startangle=90, colors=["#3498db", "#95a5a6", "#e67e22"])
                         ax1.set_title("Proportion des résultats selon le facteur Domicile/Extérieur")
-                        st.pyplot(fig1)  
+                        st.pyplot(fig1, use_container_width=True)
 
                     adv_home = float(selected_data["Avantage du Terrain"].values[0]) # Extraction de l'avantage du terrain
 
@@ -392,7 +364,7 @@ if competition_available:
                                 "bar": {"color": get_gauge_color(adv_home, max_adv_home)}
                             }
                         ))
-                        st.plotly_chart(fig2)  
+                        st.plotly_chart(fig2, use_container_width=True)  
 
                 else:
                     st.warning("Aucune donnée disponible pour cette compétition.")
@@ -441,7 +413,7 @@ if competition_available:
                 )
                 # Affichage du tableau mis en forme avec tri
                 st.subheader("⚽ Informations sur les statistiques générales (en moyenne)")
-                st.dataframe(styled_df)
+                st.dataframe(styled_df, use_container_width=True)
 
             if compare_first_goal_data:
                 # Transformation des données en DataFrame avec les noms de colonnes
@@ -470,7 +442,7 @@ if competition_available:
                 )
                 # Affichage du tableau mis en forme avec tri
                 st.subheader("⚽ Informations sur le 1er inscrit (en %)")
-                st.dataframe(styled_df)
+                st.dataframe(styled_df, use_container_width=True)
             
             if compare_distrib_goal_data:
                 # Transformation en dataframe en fonction des noms de colonnes
@@ -495,7 +467,7 @@ if competition_available:
                 )
                 # Affichage du tableau mis en forme avec tri
                 st.subheader("⚽ Informations sur la distribution des buts (en %)")
-                st.dataframe(styled_df)
+                st.dataframe(styled_df, use_container_width=True)
 
             if compare_home_away_adv_data:
                 # Transformation des données en DataFrame avec les noms de colonnes
@@ -519,6 +491,6 @@ if competition_available:
                 )
                 # Affichage du tableau mis en forme avec tri
                 st.subheader("⚽ Informations sur l'influence du facteur Domicile/Extérieur (en %)")
-                st.dataframe(styled_df)
+                st.dataframe(styled_df, use_container_width=True)
             else:
                 st.warning("Aucune donnée disponible pour comparaison.")
