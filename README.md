@@ -22,8 +22,9 @@ Plusieurs fonctionnalités seront disponibles au sein de cette application web :
 
 ![Image quality](Image/photo_equipe.jpg)
 
+![Image quality](Image/photo_confrontation_equipe.jpg)
+
 ![Image quality](Image/photo_saison.jpg)
 
 ![Image quality](Image/photo_competition.jpg)
 
-![Image quality](Image/logo_1.jpg)

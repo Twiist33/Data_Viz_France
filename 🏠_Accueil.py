@@ -10,7 +10,7 @@ import streamlit as st
 import matplotlib.image as mpimg
 
 # Charger les  fichiers PDF présent à la fin de la page d'acceuil
-with open("Documentation/Documentation_Data_Viz_France.pdff", "rb") as file:
+with open("Documentation/Documentation_Data_Viz_France.pdf", "rb") as file:
     cv_data = file.read()
 with open("Mémoire/Mémoire_Romain_Traboul.pdf", "rb") as file:
     file_data = file.read()
@@ -108,5 +108,3 @@ with col4:
         mime="application/pdf"
     )
     st.markdown("</div>", unsafe_allow_html=True)
-
-st.image("Image/logo_2.jpg") # Utilisation de la 2ème banière en fin de page
