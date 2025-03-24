@@ -26,8 +26,8 @@ load_dotenv()
 
 # Connection à la base de données Supabase
 def connect_to_supabase():
-    project_url = os.getenv("project_url")
-    api_key = os.getenv("api_key")
+    project_url = os.getenv("PROJECT_URL")
+    api_key = os.getenv("API_KEY")
     
     if not api_key:
         raise ValueError("La clé API de Supabase est manquante !")
@@ -43,11 +43,11 @@ def connect_to_supabase():
 def connect_to_db():
     try:
         conn = psycopg2.connect(
-            dbname=os.getenv("dbname"),
-            user=os.getenv("user"),
-            password=os.getenv("password"),
-            host=os.getenv("host"),
-            port=os.getenv("port")
+            dbname=os.getenv("DBNAME"),
+            user=os.getenv("USER"),
+            password=os.getenv("PASSWORD"),
+            host=os.getenv("HOST"),
+            port=os.getenv("PORT")
         )
         print("✅ Connexion réussie à la base de données !")
         return conn
@@ -423,7 +423,7 @@ def scrape_and_store_matches():
             print("✅ Extraction et stockage des matchs terminés !")
 
     process_matches_and_teams()
-    
+
 # Fonction pour récupérer les informations sur les buts
 def scrape_and_store_goals():
     conn = connect_to_db()
