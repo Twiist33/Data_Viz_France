@@ -26,8 +26,8 @@ load_dotenv()
 
 # Connection à la base de données Supabase
 def connect_to_supabase():
-    project_url = os.getenv("PROJECT_URL")
-    api_key = os.getenv("API_KEY")
+    project_url = os.getenv("project_url")
+    api_key = os.getenv("api_key")
     
     if not api_key:
         raise ValueError("La clé API de Supabase est manquante !")
@@ -39,16 +39,15 @@ def connect_to_supabase():
     except Exception as e:
         print(f"❌ Erreur de connexion à Supabase : {e}")
         return None
-
 # Connection à la base de données via Postgres
 def connect_to_db():
     try:
         conn = psycopg2.connect(
-            dbname=os.getenv("DBNAME"),
-            user=os.getenv("USER"),
-            password=os.getenv("PASSWORD"),
-            host=os.getenv("HOST"),
-            port=os.getenv("PORT")
+            dbname=os.getenv("dbname"),
+            user=os.getenv("user"),
+            password=os.getenv("password"),
+            host=os.getenv("host"),
+            port=os.getenv("port")
         )
         print("✅ Connexion réussie à la base de données !")
         return conn
@@ -62,7 +61,6 @@ class Season(BaseModel):
     season_name: str
     id_competition: int
     link_url: str
-
 # Création d'une fonction pour insérer des données sur notre projet Supabase
 def insert_seasons(seasons_df, supabase):
     seasons = [Season(**x).dict() for x in seasons_df.to_dict(orient='records')]
@@ -87,7 +85,6 @@ class Match(BaseModel):
     id_away_team: int
     match_date: date
     link_url: str
-
 # Fonction pour insérer les matches dans la base de données
 def insert_matches(matches_df, supabase):
     matches = [Match(**x).dict() for x in matches_df.to_dict(orient='records')]
@@ -124,6 +121,22 @@ def insert_goals(goals, supabase):
     ]
     execution = supabase.table('info_goal').upsert(goals).execute()
 
+# Fonction pour initialiser le WebDriver avec les options souhaitées
+def init_webdriver():
+    chrome_options = Options()
+    chrome_options.add_argument("--headless")  # Mode headless
+    chrome_options.add_argument("--disable-gpu")
+    chrome_options.add_argument("--no-sandbox")
+    chrome_options.add_argument("--disable-dev-shm-usage")
+    chrome_options.add_argument("--log-level=3")  # Désactive les logs inutiles
+    
+    # Paramètres pour bloquer les images et ne charger que le JavaScript essentiel
+    prefs = {
+        "profile.managed_default_content_settings.images": 2,  # Bloque les images
+        "profile.managed_default_content_settings.javascript": 1,  # Active uniquement le JS essentiel
+    }
+    chrome_options.add_experimental_option("prefs", prefs)
+    return webdriver.Chrome(options=chrome_options)
 def scrape_and_store_seasons():
     """Scrape les saisons de SofaScore et les stocke dans Supabase."""
     
@@ -146,74 +159,79 @@ def scrape_and_store_seasons():
     cursor.execute("SELECT id_season FROM season;")
     season_already_records = {row[0] for row in cursor.fetchall()}  # Conversion en set d'entiers
 
-    # Initialisation du WebDriver
-    def init_webdriver():
-        chrome_options = Options()
-        chrome_options.add_argument("--headless")  # Mode headless
-        chrome_options.add_argument("--disable-gpu")
-        chrome_options.add_argument("--no-sandbox")
-        chrome_options.add_argument("--disable-dev-shm-usage")
-        prefs = {
-            "profile.managed_default_content_settings.images": 2,  # Bloque les images
-            "profile.managed_default_content_settings.javascript": 1,  # Active uniquement le JS essentiel
-        }
-        chrome_options.add_experimental_option("prefs", prefs)
-        return webdriver.Chrome(options=chrome_options)
-    
+    # Initialiser le WebDriver
     driver = init_webdriver()
+    
+    # Liste pour stocker les saisons
     seasons = []
 
     try:
-        for id_competition, relative_url in records:
-            if id_competition in [335, 339, 13330]:  # Compétitions à ignorer
+        for record in records:
+            id_competition = record[0]
+    
+            # Ignorer certaines compétitions (Coupe de France, Trophée des Champions)
+            if id_competition in [335, 339, 13330]:
+                print(f"Compétition ignorée avec id_competition = {id_competition}")
                 continue
-
+    
+            relative_url = record[1]
             url_season_french = 'https://www.sofascore.com' + relative_url
             driver.get(url_season_french)
-            time.sleep(5)
-
-            # 🔹 Gérer la bannière des cookies
+            print(f"Navigué à : {url_season_french}")
+    
+            time.sleep(5)  # Attendre le chargement initial de la page 
+            # Gérer la bannière des cookies
             try:
                 cookies_button = WebDriverWait(driver, 5).until(
                     EC.element_to_be_clickable((By.CLASS_NAME, "fc-cta-consent"))
                 )
                 cookies_button.click()
-            except:
-                pass
-
-            targeted_seasons = ["24/25", "23/24", "22/23", "21/22", "2024/25"]
-            season_found = False
-
+            except Exception:
+                print("Aucune bannière de cookies détectée.")
+    
+            # Boucler sur les saisons ciblées
+            targeted_seasons = ["24/25", "23/24", "22/23", "21/22","2024/25"]
+    
+            season_found = False  # Flag pour savoir si on trouve une saison valide
+    
             for season in targeted_seasons:
                 try:
+                    # Rechercher et cliquer sur le bouton du menu déroulant
                     dropdown_button = WebDriverWait(driver, 10).until(
                         EC.element_to_be_clickable((By.CLASS_NAME, "DropdownButton"))
                     )
                     dropdown_button.click()
-                    time.sleep(1)
-
+                    time.sleep(1)  # Petite pause pour le menu déroulant
+    
+                    # Récupérer toutes les saisons disponibles dans le menu déroulant
                     dropdown_options = WebDriverWait(driver, 10).until(
                         EC.presence_of_all_elements_located((By.CLASS_NAME, "DropdownItem"))
                     )
-
+                    # Vérifier si la saison est présente dans le menu déroulant
                     for option in dropdown_options:
                         if option.text.strip() == season:
+                            print(f"Option trouvée : {season}, clic en cours...")
                             ActionChains(driver).move_to_element(option).click(option).perform()
-                            time.sleep(3)
-
+                            time.sleep(3)  # Attendre que la page se recharge
+    
+                            # Valider que la page a bien été rechargée
                             WebDriverWait(driver, 10).until(
                                 EC.presence_of_element_located((By.CLASS_NAME, "DropdownButton"))
                             )
-
+    
+                            # Récupérer l'URL actuelle
                             current_url = driver.current_url
+                            print(f"URL actuelle récupérée : {current_url}")
+                            # Extraire les informations de la saison
                             parts = current_url.split('/')
                             id_season = int(parts[-1].split('#id:')[-1])         
                             competition_name = " ".join(parts[-2].split('-')).title()
                             season_name = f"{competition_name} {season}"
-
+                            print(f"Extrait : ID Saison = {id_season}, Nom = {season_name}, Lien = {current_url}")                        
                             if id_season in season_already_records:
+                                print(f" (ID Saison: {id_season}) déjà enregistrée, passage à la suivante.")
                                 continue 
-
+                            # Ajouter l'objet Season
                             season_obj = Season(
                                 id_season=id_season,
                                 season_name=season_name,
@@ -221,23 +239,29 @@ def scrape_and_store_seasons():
                                 link_url=current_url
                             )
                             seasons.append(season_obj)
-
+    
+                            # Marquer la saison trouvée et sortir de la boucle
                             season_found = True
                             break
-                except:
+    
+                    if not season_found:
+                        continue
+                except Exception as e:
                     continue
-
-            if not season_found:
-                continue
-
-        # 🔹 Insérer les saisons dans Supabase
-        if seasons:
-            seasons_df = pd.DataFrame([seas.model_dump() for seas in seasons])
-            insert_seasons(seasons_df, supabase)
+    
+        # Vérifier les saisons extraites
+        if not seasons:
+            print("La liste 'seasons' est vide. Aucune donnée n'a été extraite.")
         else:
-            print("Aucune nouvelle saison à insérer.")
-
+            print(f"Nombre de saisons extraites : {len(seasons)}")
+        # Convertir les saisons en DataFrame
+        seasons_df = pd.DataFrame([seas.model_dump() for seas in seasons])
+    
+        # Insérer les données dans Supabase
+        insert_seasons(seasons_df, supabase)
+    
     finally:
+        # Fermer le navigateur
         driver.quit()
         conn.close()
 
@@ -253,113 +277,153 @@ def scrape_and_store_matches():
     cursor = conn.cursor()
     cursor.execute("SELECT id_season, link_url FROM season;")
     info_seasons = cursor.fetchall()
+
     
     cursor.execute("SELECT id_match FROM info_goal;")
-    existing_matches = {row[0] for row in cursor.fetchall()}
-    
-    cursor.execute("""
-        SELECT DISTINCT s.id_season FROM season s 
-        JOIN info_match im ON s.id_season = im.id_season 
-        WHERE s.season_name NOT LIKE '%24/25%' 
-        AND s.season_name NOT LIKE '%2024/25%';
-    """)
-    past_seasons = {row[0] for row in cursor.fetchall()}
+    info_matchs_goal = {row[0] for row in cursor.fetchall()}  # Conversion en set d'entiers
 
-    # Initialisation du WebDriver
-    def init_webdriver():
-        chrome_options = Options()
-        chrome_options.add_argument("--headless")  # Mode headless
-        chrome_options.add_argument("--disable-gpu")
-        chrome_options.add_argument("--no-sandbox")
-        chrome_options.add_argument("--disable-dev-shm-usage")
-        prefs = {
-            "profile.managed_default_content_settings.images": 2,  # Bloque les images
-            "profile.managed_default_content_settings.javascript": 1,  # Active uniquement le JS essentiel
-        }
-        chrome_options.add_experimental_option("prefs", prefs)
-        return webdriver.Chrome(options=chrome_options)
+    # On effectue la requête pour obtenir les identifiants des matchs dejà dans la base
+    cursor.execute("SELECT DISTINCT s.id_season FROM season s JOIN info_match im ON s.id_season = im.id_season WHERE s.season_name NOT LIKE '%24/25%' AND s.season_name NOT LIKE '%2024/25%';")
+    not_current_season_and_already_stored = {row[0] for row in cursor.fetchall()}  # Conversion en set d'entiers
     
-    driver = init_webdriver() 
-    matches, teams = [], []
-    
+    # Initialiser le WebDriver
+    driver = init_webdriver()
+
+    # Initialiser les listes pour stocker les données
+    matches = []
+    teams = []
+
     def handle_cookies():
+        """Gère la bannière des cookies."""
         try:
             cookies_button = WebDriverWait(driver, 5).until(
                 EC.element_to_be_clickable((By.CLASS_NAME, "fc-cta-consent"))
             )
             cookies_button.click()
-        except:
-            pass
-
-    def extract_matches(id_season, url):
-        driver.get(url)
-        time.sleep(5)
-        handle_cookies()
-        
+        except Exception:
+            print("Aucune bannière de cookies détectée.")
+    
+    def extract_matches_and_teams(id_season):
+        """Extrait les matchs, les équipes et les dates pour toutes les journées disponibles."""
         while True:
             try:
+                # Attendre le chargement des matchs de la journée courante
+                target_div = WebDriverWait(driver, 10).until(
+                    EC.presence_of_element_located((By.CLASS_NAME, "TabPanel.bpHovE"))
+                )
                 html_content = driver.page_source
                 soup = BeautifulSoup(html_content, 'html.parser')
-                
+
+                # Vérifier si c'est la première journée (Tour 1)
+                tour_info = soup.find('span', class_='Text rJhVM')
+                if tour_info and tour_info.text.strip() == "Tour 1":
+                    break
+
+                # Extraction des matchs
                 for link in soup.find_all('a', {"data-testid": "event_cell"}):
                     href = link.get('href')
+                    if not href:
+                        continue
+
+                    # ID du match
                     id_match = int(link.get('data-id'))
-                    if id_match in existing_matches:
+
+                    # Vérifier si le match est déjà collecté
+                    if id_match in info_matchs_goal:
+                        continue
+
+                    # Vérifier si le match n'est pas valide
+                    event_status = link.find('bdi', {'class': 'Text fgUtAL'})
+                    if event_status and any(status in event_status.text.strip() for status in ["Reporté", "Abandon", "Annulé"]):
                         continue
                     
-                    date_element = link.find('bdi', {'class': 'Text kcRyBI'})
+                    event_status_tv = link.find('bdi', {'class': 'Text kkVniA'})
+                    if event_status_tv and any(status in event_status_tv.text.strip() for status in ["Tapis vert"]):
+                        continue
+
+                    # Date du match
+                    event_time_element = link.find('bdi', {'class': 'Text kcRyBI'})
                     match_date = None
-                    if date_element:
+                    if event_time_element:
+                        event_text = event_time_element.text.strip()
                         try:
-                            match_date = datetime.strptime(date_element.text.strip().split()[0], "%d/%m/%y").strftime("%Y-%m-%d")
-                        except:
+                            match_date = datetime.strptime(event_text.split()[0], "%d/%m/%y").strftime("%Y-%m-%d")
+                        except ValueError:
                             continue
-                    
-                    home_team = link.find('div', {'data-testid': 'left_team'})
-                    away_team = link.find('div', {'data-testid': 'right_team'})
-                    
-                    id_home_team = int(home_team.find('img')['src'].split('/')[-3])
-                    id_away_team = int(away_team.find('img')['src'].split('/')[-3])
-                    
-                    team_home_name = home_team.find('bdi').text.strip()
-                    team_away_name = away_team.find('bdi').text.strip()
-                    
+
+                    # Équipes et ID
+                    id_home_team = link.find('div', {'data-testid': 'left_team'}).find('img')['src'].split('/')[-3]
+                    id_away_team = link.find('div', {'data-testid': 'right_team'}).find('img')['src'].split('/')[-3]
+                    team_home_name = link.find('div', {'data-testid': 'left_team'}).find('bdi').text.strip()
+                    team_away_name = link.find('div', {'data-testid': 'right_team'}).find('bdi').text.strip()
+
+                    # Ajouter les matchs et les équipes
                     matches.append({
                         'id_match': id_match,
                         'id_season': id_season,
                         'id_home_team': id_home_team,
                         'id_away_team': id_away_team,
-                        'match_date': match_date,
-                        'link_url': href
+                        'link_url': href,
+                        'match_date': match_date
                     })
                     teams.append({'id_team': id_home_team, 'team_name': team_home_name})
                     teams.append({'id_team': id_away_team, 'team_name': team_away_name})
-                
-                prev_button = driver.find_element(By.XPATH, 
+
+                # Vérifier si le bouton "Précédent" est disponible
+                previous_button = driver.find_element(By.XPATH, 
                     "//div[contains(@class, 'Box Flex')]/button[contains(@class, 'Button') and contains(@style, 'visible')][1]"
                 )
-                if prev_button:
-                    prev_button.click()
-                    time.sleep(3)
+                if previous_button:
+                    previous_button.click()
+                    time.sleep(3)  # Attendre le chargement de la journée précédente
                 else:
+                    print("Aucun bouton 'Précédent' disponible. Fin de l'extraction pour cette saison.")
                     break
-            except:
+            except Exception as e:
                 break
-    
-    for id_season, url in info_seasons:
-        if id_season in past_seasons:
-            continue
-        extract_matches(id_season, url)
-    
-    if matches:
-        insert_matches(pd.DataFrame(matches).drop_duplicates(subset=['id_match']), supabase)
-    if teams:
-        insert_teams(pd.DataFrame(teams).drop_duplicates(subset=['id_team']), supabase)
-    
-    driver.quit()
-    conn.close()
-    print("✅ Extraction et stockage des matchs terminés !")
 
+    def process_season(info_season):
+        """Traite les données d'une saison complète."""
+        id_season, url_season_french = info_season
+
+        # Vérifier si la saison est déjà enregistrée et terminée
+        if id_season in not_current_season_and_already_stored:
+            print(f"Compétition déjà enregistrée et terminée : {url_season_french}")
+            return  # Passer directement à la saison suivante
+
+        driver.get(url_season_french)
+        print(f"Navigué à : {url_season_french}")
+
+        time.sleep(5)  # Attendre le chargement initial de la page
+        handle_cookies()
+
+        # Extraire les matchs pour toutes les journées
+        extract_matches_and_teams(id_season)
+
+    def process_matches_and_teams():
+        try:
+            # Pour collecter les matchs et les équipes provenant de la table des saisons
+            for info_season in info_seasons:
+                process_season(info_season)
+
+            # Convertir les listes en DataFrames et supprimer les doublons
+            matches_df = pd.DataFrame(matches).drop_duplicates(subset=['id_match'])
+            teams_df = pd.DataFrame(teams).drop_duplicates(subset=['id_team'])
+
+            # Insérer les données dans Supabase
+            print("Insertion des équipes...")
+            insert_teams(teams_df, supabase)
+
+            print("Insertion des matchs...")
+            insert_matchs(matches_df, supabase)
+
+        finally:
+            driver.quit()
+            conn.close()
+            print("✅ Extraction et stockage des matchs terminés !")
+
+    process_matches_and_teams()
+    
 # Fonction pour récupérer les informations sur les buts
 def scrape_and_store_goals():
     conn = connect_to_db()
@@ -386,7 +450,6 @@ def scrape_and_store_goals():
     """)
 
     info_matchs_season = cursor.fetchall()
-
     # On effectue la requête pour obtenir les identifiants des matchs dejà dans la base
     cursor.execute("SELECT id_match FROM info_goal;")
     info_matchs_goal = {row[0] for row in cursor.fetchall()}  # Conversion en set d'entiers
@@ -394,20 +457,6 @@ def scrape_and_store_goals():
     # On effectue la requête pour obtenir les identifiants des matchs dejà dans la base
     cursor.execute("SELECT DISTINCT s.id_season FROM season s JOIN info_match im ON s.id_season = im.id_season WHERE s.season_name NOT LIKE '%24/25%' AND s.season_name NOT LIKE '%2024/25%';")
     not_current_season_and_already_stored = {row[0] for row in cursor.fetchall()}  # Conversion en set d'entiers
-
-    # Initialisation du WebDriver
-    def init_webdriver():
-        chrome_options = Options()
-        chrome_options.add_argument("--headless")  # Mode headless
-        chrome_options.add_argument("--disable-gpu")
-        chrome_options.add_argument("--no-sandbox")
-        chrome_options.add_argument("--disable-dev-shm-usage")
-        prefs = {
-            "profile.managed_default_content_settings.images": 2,  # Bloque les images
-            "profile.managed_default_content_settings.javascript": 1,  # Active uniquement le JS essentiel
-        }
-        chrome_options.add_experimental_option("prefs", prefs)
-        return webdriver.Chrome(options=chrome_options)
 
     def handle_cookies_banner(driver):
         try:
@@ -446,7 +495,6 @@ def scrape_and_store_goals():
         if score_home == score_away:
             return 0  # Match nul
         return 1 if score_home > score_away else 2  # Victoire domicile ou extérieur
-
     def calculate_time_intervals(incidents, match_goal_df):
         """
         Calcule le nombre de buts par intervalles de temps et met à jour le DataFrame match_goal_df.
@@ -581,7 +629,7 @@ def scrape_and_store_goals():
 
     extract_goals(info_matchs, info_matchs_season, supabase, info_matchs_goal,not_current_season_and_already_stored)
 
-# Éxécuter la fonction
+# Exécuter la fonction
 if __name__ == "__main__":
     scrape_and_store_seasons()
     scrape_and_store_matches()
