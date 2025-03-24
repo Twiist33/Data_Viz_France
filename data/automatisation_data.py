@@ -160,24 +160,23 @@ class Goal(BaseModel):
 
 # Création d'une fonction pour insérer des données sur notre projet Supabase
 def insert_goals(goals, supabase):
-    # Vérification si le DataFrame des goals est vide
     if not goals.empty:
-        # Conversion du DataFrame en une liste de dictionnaires pour correspondre au format attendu par Supabase
         goal_data = [
             Goal(**x).model_dump()
             for x in goals.to_dict(orient='records')
         ]
         
-        # Exécution de l'upsert pour insérer ou mettre à jour les données dans la table 'info_goal'
+        # Exécution de l'upsert
         execution = supabase.table('info_goal').upsert(goal_data).execute()
         
-        # Vérification du succès de l'opération
-        if execution.status_code == 200:
-            print(f"✅ {len(goal_data)} buts insérés dans Supabase.")
+        # Nouvelle vérification du succès
+        if execution.error:  # Vérifie s'il y a une erreur
+            print(f"⚠️ Erreur lors de l'insertion des buts : {execution.error}")
         else:
-            print(f"⚠️ Erreur lors de l'insertion des buts : {execution.error_message}")
+            print(f"✅ {len(goal_data)} buts insérés dans Supabase.")
     else:
         print("Le DataFrame des buts est vide, aucune donnée à insérer.")
+
 
 # Fonction pour initialiser le WebDriver avec les options souhaitées
 def init_webdriver():
@@ -336,7 +335,6 @@ def scrape_and_store_matches():
     cursor.execute("SELECT id_season, link_url FROM season;")
     info_seasons = cursor.fetchall()
 
-    
     cursor.execute("SELECT id_match FROM info_goal;")
     info_matchs_goal = {row[0] for row in cursor.fetchall()}  # Conversion en set d'entiers
 
@@ -458,29 +456,28 @@ def scrape_and_store_matches():
         # Extraire les matchs pour toutes les journées
         extract_matches_and_teams(id_season)
 
-    def process_matches_and_teams():
-        try:
-            # Pour collecter les matchs et les équipes provenant de la table des saisons
-            for info_season in info_seasons:
-                process_season(info_season)
+    try:
+        # Pour collecter les matchs et les équipes provenant de la table des saisons
+        for info_season in info_seasons:
+            process_season(info_season)
 
-            # Convertir les listes en DataFrames et supprimer les doublons
-            matches_df = pd.DataFrame(matches).drop_duplicates(subset=['id_match'])
-            teams_df = pd.DataFrame(teams).drop_duplicates(subset=['id_team'])
+        # Convertir les listes en DataFrames et supprimer les doublons
+        matches_df = pd.DataFrame(matches).drop_duplicates(subset=['id_match'])
+        teams_df = pd.DataFrame(teams).drop_duplicates(subset=['id_team'])
 
-            # Insérer les données dans Supabase
-            print("Insertion des équipes...")
-            insert_teams(teams_df, supabase)
+        # Insérer les données dans Supabase
+        print("Insertion des équipes...")
+        insert_teams(teams_df, supabase)
 
-            print("Insertion des matchs...")
-            insert_matchs(matches_df, supabase)
+        print("Insertion des matchs...")
+        insert_matchs(matches_df, supabase)
 
-        finally:
-            driver.quit()
-            conn.close()
-            print("✅ Extraction et stockage des matchs terminés !")
+    finally:
+        driver.quit()
+        conn.close()
+        print("✅ Extraction et stockage des matchs terminés !")
 
-    process_matches_and_teams()
+
 
 # Fonction pour récupérer les informations sur les buts
 def scrape_and_store_goals():
@@ -676,6 +673,7 @@ def scrape_and_store_goals():
         finally:
             # S'assurer que le WebDriver est fermé même en cas d'erreur
             driver.quit()
+            conn.close()
 
         # Combiner toutes les données collectées
         if matchs:
