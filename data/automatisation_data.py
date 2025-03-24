@@ -456,7 +456,7 @@ def scrape_matches():
         # Extraire les matchs pour toutes les journées
         extract_matches_and_teams(id_season)
     
-    def scrape_and_store_matches()
+    def scrape_and_store_matches():
         try:
             # Pour collecter les matchs et les équipes provenant de la table des saisons
             for info_season in info_seasons:
