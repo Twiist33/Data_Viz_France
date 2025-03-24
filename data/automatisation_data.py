@@ -115,7 +115,7 @@ class Match(BaseModel):
     link_url: str
 
 # Fonction pour insérer les matches dans la base de données
-def insert_matches(matches_df, supabase):
+def insert_matchs(matches_df, supabase):
     # Vérification si le DataFrame des matches est vide
     if not matches_df.empty:
         # Conversion du DataFrame en une liste de dictionnaires pour correspondre au format attendu par Supabase
