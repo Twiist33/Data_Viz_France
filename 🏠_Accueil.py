@@ -11,13 +11,13 @@ import matplotlib.image as mpimg
 
 # Charger les  fichiers PDF présent à la fin de la page d'acceuil
 with open("Documentation/Documentation_Data_Viz_France.pdf", "rb") as file:
-    cv_data = file.read()
+    doc = file.read()
 with open("Mémoire/Mémoire_Romain_Traboul.pdf", "rb") as file:
-    file_data = file.read()
+    memoire = file.read()
 with open("CV/CV_FR_Romain_Traboul.pdf", "rb") as file:
-    cv_data = file.read()
+    cv_data_fr = file.read()
 with open("CV/CV_ENG_Romain_Traboul.pdf", "rb") as file:
-    cv_data = file.read()
+    cv_data_eng = file.read()
 
 # Affichage du titre et du logo de l'application web
 st.set_page_config(page_title="Data Viz ⚽ 🇫🇷", page_icon="📊", layout="centered")
@@ -70,7 +70,7 @@ with col1:
     st.markdown("<div style='text-align: center;'>", unsafe_allow_html=True)
     st.download_button(
         label="Documentation",
-        data=file_data,
+        data=doc,
         file_name="Documentation_Data_Viz_France.pdf",
         mime="application/pdf"
     )
@@ -81,7 +81,7 @@ with col2:
     st.markdown("<div style='text-align: center;'>", unsafe_allow_html=True)
     st.download_button(
         label="Mon mémoire de M1",
-        data=file_data,
+        data=memoire,
         file_name="Mémoire_Romain_Traboul.pdf",
         mime="application/pdf"
     )
@@ -92,7 +92,7 @@ with col3:
     st.markdown("<div style='text-align: center;'>", unsafe_allow_html=True)
     st.download_button(
         label="Mon CV en français",
-        data=cv_data,
+        data=cv_data_fr,
         file_name="CV_FR_Romain_Traboul.pdf",
         mime="application/pdf"
     )
@@ -103,7 +103,7 @@ with col4:
     st.markdown("<div style='text-align: center;'>", unsafe_allow_html=True)
     st.download_button(
         label="Mon CV en anglais",
-        data=cv_data,
+        data=cv_data_eng,
         file_name="CV_ENG_Romain_Traboul.pdf",
         mime="application/pdf"
     )
