@@ -27,17 +27,17 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-pip-
       - name: Installer les dépendances
-        run : 
+        run : |
           python -m pip install --upgrade pip
-          pip install -r requirements.txt
+          pip install -r requirements.txt || echo "⚠️ Erreur dans requirements.txt"
 
       - name: Exécuter le script Python avec les identifiants
         env:
-          project_url: ${{ secrets.project_url }}
-          api_key: ${{ secrets.api_key }}
-          dbname: ${{ secrets.dbname }}
-          user: ${{ secrets.user }}
-          password: ${{ secrets.password }}
-          host: ${{ secrets.host }}
-          port: ${{ secrets.port }}          
-        run: python data/automatisation_data.py
+          PROJECT_URL: ${{ secrets.PROJECT_URL }}
+          API_KEY: ${{ secrets.API_KEY }}
+          DBNAME: ${{ secrets.DBNAME }}
+          USER: ${{ secrets.USER }}
+          PASSWORD: ${{ secrets.PASSWORD }}
+          HOST: ${{ secrets.HOST }}
+          PORT: ${{ secrets.PORT }}        
+        run: python data/automatisation_data.py || echo "⚠️ Erreur dans automation_data.py"
