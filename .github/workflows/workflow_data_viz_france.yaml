@@ -1,0 +1,42 @@
+name: Automatisation Python
+
+on:
+  push:
+    branches:
+      - main
+  schedule:
+    - cron: '0 0 * * 1'
+jobs:
+  run-script:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Cloner le dépôt
+        uses: actions/checkout@v4
+
+      - name: Installer Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Configurer le cache de pip
+        uses: actions/cache@v3
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+      - name: Installer les dépendances
+        python -m pip install --upgrade pip
+        run: pip install -r requirements.txt
+
+      - name: Exécuter le script Python avec les identifiants
+        env:
+          project_url: ${{ secrets.project_url }}
+          api_key: ${{ secrets.api_key }}
+          dbname: ${{ secrets.dbname }}
+          user: ${{ secrets.user }}
+          password: ${{ secrets.password }}
+          host: ${{ secrets.host }}
+          port: ${{ secrets.port }}          
+        run: python data/automatisation_data.py

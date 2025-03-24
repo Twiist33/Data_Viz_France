@@ -5,3 +5,9 @@ plotly
 seaborn
 supabase
 python-dotenv
+numpy
+beautifulsoup4
+pydantic
+selenium
+psycopg2
+tqdm
