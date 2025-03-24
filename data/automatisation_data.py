@@ -323,7 +323,7 @@ def scrape_and_store_seasons():
         conn.close()
 
 # Fonction pour récupérer les informations sur les matchs
-def scrape_and_store_matches():
+def scrape_matches():
     conn = connect_to_db()
     if not conn:
         return
@@ -338,7 +338,7 @@ def scrape_and_store_matches():
     cursor.execute("SELECT id_match FROM info_goal;")
     info_matchs_goal = {row[0] for row in cursor.fetchall()}  # Conversion en set d'entiers
 
-    # On effectue la requête pour obtenir les identifiants des matchs dejà dans la base
+    # On effectue la requête pour obtenir la liste des saisons déjà collecté
     cursor.execute("SELECT DISTINCT s.id_season FROM season s JOIN info_match im ON s.id_season = im.id_season WHERE s.season_name NOT LIKE '%24/25%' AND s.season_name NOT LIKE '%2024/25%';")
     not_current_season_and_already_stored = {row[0] for row in cursor.fetchall()}  # Conversion en set d'entiers
     
@@ -455,27 +455,28 @@ def scrape_and_store_matches():
 
         # Extraire les matchs pour toutes les journées
         extract_matches_and_teams(id_season)
+    
+    def scrape_and_store_matches()
+        try:
+            # Pour collecter les matchs et les équipes provenant de la table des saisons
+            for info_season in info_seasons:
+                process_season(info_season)
 
-    try:
-        # Pour collecter les matchs et les équipes provenant de la table des saisons
-        for info_season in info_seasons:
-            process_season(info_season)
+            # Convertir les listes en DataFrames et supprimer les doublons
+            matches_df = pd.DataFrame(matches).drop_duplicates(subset=['id_match'])
+            teams_df = pd.DataFrame(teams).drop_duplicates(subset=['id_team'])
 
-        # Convertir les listes en DataFrames et supprimer les doublons
-        matches_df = pd.DataFrame(matches).drop_duplicates(subset=['id_match'])
-        teams_df = pd.DataFrame(teams).drop_duplicates(subset=['id_team'])
+            # Insérer les données dans Supabase
+            print("Insertion des équipes...")
+            insert_teams(teams_df, supabase)
 
-        # Insérer les données dans Supabase
-        print("Insertion des équipes...")
-        insert_teams(teams_df, supabase)
+            print("Insertion des matchs...")
+            insert_matchs(matches_df, supabase)
 
-        print("Insertion des matchs...")
-        insert_matchs(matches_df, supabase)
-
-    finally:
-        driver.quit()
-        conn.close()
-        print("✅ Extraction et stockage des matchs terminés !")
+        finally:
+            driver.quit()
+            conn.close()
+            print("✅ Extraction et stockage des matchs terminés !")
 
 
 
