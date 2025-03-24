@@ -9,5 +9,5 @@ numpy
 beautifulsoup4
 pydantic
 selenium
-psycopg2
+psycopg2-binary
 tqdm
