@@ -146,8 +146,21 @@ def scrape_and_store_seasons():
     cursor.execute("SELECT id_season FROM season;")
     season_already_records = {row[0] for row in cursor.fetchall()}  # Conversion en set d'entiers
 
-    # 🔹 Initialiser Selenium
-    driver = webdriver.Chrome()
+    # Initialisation du WebDriver
+    def init_webdriver():
+        chrome_options = Options()
+        chrome_options.add_argument("--headless")  # Mode headless
+        chrome_options.add_argument("--disable-gpu")
+        chrome_options.add_argument("--no-sandbox")
+        chrome_options.add_argument("--disable-dev-shm-usage")
+        prefs = {
+            "profile.managed_default_content_settings.images": 2,  # Bloque les images
+            "profile.managed_default_content_settings.javascript": 1,  # Active uniquement le JS essentiel
+        }
+        chrome_options.add_experimental_option("prefs", prefs)
+        return webdriver.Chrome(options=chrome_options)
+    
+    driver = init_webdriver()
     seasons = []
 
     try:
@@ -251,8 +264,22 @@ def scrape_and_store_matches():
         AND s.season_name NOT LIKE '%2024/25%';
     """)
     past_seasons = {row[0] for row in cursor.fetchall()}
+
+    # Initialisation du WebDriver
+    def init_webdriver():
+        chrome_options = Options()
+        chrome_options.add_argument("--headless")  # Mode headless
+        chrome_options.add_argument("--disable-gpu")
+        chrome_options.add_argument("--no-sandbox")
+        chrome_options.add_argument("--disable-dev-shm-usage")
+        prefs = {
+            "profile.managed_default_content_settings.images": 2,  # Bloque les images
+            "profile.managed_default_content_settings.javascript": 1,  # Active uniquement le JS essentiel
+        }
+        chrome_options.add_experimental_option("prefs", prefs)
+        return webdriver.Chrome(options=chrome_options)
     
-    driver = webdriver.Chrome()
+    driver = init_webdriver() 
     matches, teams = [], []
     
     def handle_cookies():
