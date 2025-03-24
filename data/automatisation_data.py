@@ -61,10 +61,25 @@ class Season(BaseModel):
     season_name: str
     id_competition: int
     link_url: str
+
 # Création d'une fonction pour insérer des données sur notre projet Supabase
 def insert_seasons(seasons_df, supabase):
-    seasons = [Season(**x).dict() for x in seasons_df.to_dict(orient='records')]
-    execution = supabase.table('season').upsert(seasons).execute()
+    # Vérification si le DataFrame est vide avant d'essayer de l'insérer
+    if not seasons_df.empty:
+        # Conversion du DataFrame en une liste de dictionnaires pour correspondre au format attendu par Supabase
+        seasons = [Season(**x).dict() for x in seasons_df.to_dict(orient='records')]
+        
+        # Exécution de l'upsert pour insérer ou mettre à jour les données dans la table 'season'
+        execution = supabase.table('season').upsert(seasons).execute()
+
+        # Vérification du succès de l'opération
+        if execution.status_code == 200:
+            print("Les saisons ont été insérées avec succès.")
+        else:
+            print(f"Erreur lors de l'insertion des saisons: {execution.error_message}")
+    else:
+        print("Le DataFrame des saisons est vide, aucune donnée à insérer.")
+
 
 # Création d'une classe pour les informations sur les équipes
 class Team(BaseModel):
@@ -73,9 +88,22 @@ class Team(BaseModel):
 
 # Création d'une fonction pour insérer les informations des équipes dans la base de données
 def insert_teams(teams_df, supabase):
-    teams = [Team(**x).dict() for x in teams_df.to_dict(orient='records')]
-    supabase.table('team').upsert(teams).execute()
-    print(f"✅ {len(teams)} équipes insérées dans Supabase.")
+    # Vérification si le DataFrame des équipes est vide
+    if not teams_df.empty:
+        # Conversion du DataFrame en une liste de dictionnaires pour correspondre au format attendu par Supabase
+        teams = [Team(**x).dict() for x in teams_df.to_dict(orient='records')]
+        
+        # Exécution de l'upsert pour insérer ou mettre à jour les données dans la table 'team'
+        execution = supabase.table('team').upsert(teams).execute()
+        
+        # Vérification du succès de l'opération
+        if execution.status_code == 200:
+            print(f"✅ {len(teams)} équipes insérées dans Supabase.")
+        else:
+            print(f"⚠️ Erreur lors de l'insertion des équipes : {execution.error_message}")
+    else:
+        print("Le DataFrame des équipes est vide, aucune donnée à insérer.")
+
 
 # Création d'une classe pour les matchs
 class Match(BaseModel):
@@ -85,13 +113,30 @@ class Match(BaseModel):
     id_away_team: int
     match_date: date
     link_url: str
+
 # Fonction pour insérer les matches dans la base de données
 def insert_matches(matches_df, supabase):
-    matches = [Match(**x).dict() for x in matches_df.to_dict(orient='records')]
-    for match in matches:
-        if isinstance(match['match_date'], date):
-            match['match_date'] = match['match_date'].strftime('%Y-%m-%d')
-    supabase.table('info_match').upsert(matches).execute()
+    # Vérification si le DataFrame des matches est vide
+    if not matches_df.empty:
+        # Conversion du DataFrame en une liste de dictionnaires pour correspondre au format attendu par Supabase
+        matches = [Match(**x).dict() for x in matches_df.to_dict(orient='records')]
+        
+        # Formatage de la date si elle est du type 'date'
+        for match in matches:
+            if isinstance(match['match_date'], date):
+                match['match_date'] = match['match_date'].strftime('%Y-%m-%d')
+        
+        # Exécution de l'upsert pour insérer ou mettre à jour les données dans la table 'info_match'
+        execution = supabase.table('info_match').upsert(matches).execute()
+        
+        # Vérification du succès de l'opération
+        if execution.status_code == 200:
+            print(f"✅ {len(matches)} matches insérés dans Supabase.")
+        else:
+            print(f"⚠️ Erreur lors de l'insertion des matches : {execution.error_message}")
+    else:
+        print("Le DataFrame des matches est vide, aucune donnée à insérer.")
+
 
 # Définition de la classe Goal
 class Goal(BaseModel):
@@ -115,11 +160,24 @@ class Goal(BaseModel):
 
 # Création d'une fonction pour insérer des données sur notre projet Supabase
 def insert_goals(goals, supabase):
-    goals = [
-        Goal(**x).model_dump()
-        for x in goals.to_dict(orient='records')
-    ]
-    execution = supabase.table('info_goal').upsert(goals).execute()
+    # Vérification si le DataFrame des goals est vide
+    if not goals.empty:
+        # Conversion du DataFrame en une liste de dictionnaires pour correspondre au format attendu par Supabase
+        goal_data = [
+            Goal(**x).model_dump()
+            for x in goals.to_dict(orient='records')
+        ]
+        
+        # Exécution de l'upsert pour insérer ou mettre à jour les données dans la table 'info_goal'
+        execution = supabase.table('info_goal').upsert(goal_data).execute()
+        
+        # Vérification du succès de l'opération
+        if execution.status_code == 200:
+            print(f"✅ {len(goal_data)} buts insérés dans Supabase.")
+        else:
+            print(f"⚠️ Erreur lors de l'insertion des buts : {execution.error_message}")
+    else:
+        print("Le DataFrame des buts est vide, aucune donnée à insérer.")
 
 # Fonction pour initialiser le WebDriver avec les options souhaitées
 def init_webdriver():
