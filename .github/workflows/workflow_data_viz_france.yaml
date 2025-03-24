@@ -6,6 +6,7 @@ on:
       - main
   schedule:
     - cron: '0 0 * * 1'
+    
 jobs:
   run-script:
     runs-on: ubuntu-latest
@@ -19,17 +20,8 @@ jobs:
         with:
           python-version: '3.12'
 
-      - name: Configurer le cache de pip
-        uses: actions/cache@v3
-        with:
-          path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
-          restore-keys: |
-            ${{ runner.os }}-pip-
       - name: Installer les dépendances
-        run : |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt || echo "⚠️ Erreur dans requirements.txt"
+        run: pip install -r requirements.txt
 
       - name: Exécuter le script Python avec les identifiants
         env:
@@ -40,4 +32,4 @@ jobs:
           PASSWORD: ${{ secrets.PASSWORD }}
           HOST: ${{ secrets.HOST }}
           PORT: ${{ secrets.PORT }}        
-        run: python data/automatisation_data.py || echo "⚠️ Erreur dans automation_data.py"
+        run: python data/automatisation_data.py
