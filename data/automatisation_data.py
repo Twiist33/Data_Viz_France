@@ -337,7 +337,10 @@ def init_function_matches():
     # On effectue la requête pour obtenir la liste des saisons déjà collecté
     cursor.execute("SELECT DISTINCT s.id_season FROM season s JOIN info_match im ON s.id_season = im.id_season WHERE s.season_name NOT LIKE '%24/25%' AND s.season_name NOT LIKE '%2024/25%';")
     not_current_season_and_already_stored = {row[0] for row in cursor.fetchall()}  # Conversion en set d'entiers
-        
+
+    return info_seasons, info_matchs_goal, not_current_season_and_already_stored
+
+def scrape_and_store_matches():
 def handle_cookies():
     """Gère la bannière des cookies."""
     try:
@@ -449,7 +452,7 @@ def process_season(info_season):
 
 def scrape_and_store_matches():
     try:
-        init_function_matches() # Initialisation de la base de données et des informations associées
+        info_seasons, info_matchs_goal, not_current_season_and_already_stored = init_function_matches()
 
         driver = init_webdriver() # Initialiser le WebDriver
 
@@ -508,6 +511,8 @@ def init_function_goals():
     # On effectue la requête pour obtenir les identifiants des matchs dejà dans la base
     cursor.execute("SELECT DISTINCT s.id_season FROM season s JOIN info_match im ON s.id_season = im.id_season WHERE s.season_name NOT LIKE '%24/25%' AND s.season_name NOT LIKE '%2024/25%';")
     not_current_season_and_already_stored = {row[0] for row in cursor.fetchall()}  # Conversion en set d'entiers
+
+    return info_matchs, info_matchs_season, not_current_season_and_already_stored
 
 def handle_cookies_banner(driver):
     try:
@@ -679,7 +684,7 @@ def extract_goals(info_matchs, info_matchs_season, supabase, info_matchs_goal, n
 # Fonction pour récupérer les informations sur les buts
 def scrape_and_store_goals():
     
-    init_function_goals() # Initialisation de la base de données et des informations associées
+    info_matchs, info_matchs_season, not_current_season_and_already_stored = init_function_goals() # Initialisation de la base de données et des informations associées
     extract_goals(info_matchs, info_matchs_season, supabase, info_matchs_goal,not_current_season_and_already_stored)
 
 # Exécuter la fonction
