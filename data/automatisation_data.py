@@ -340,7 +340,6 @@ def init_function_matches():
 
     return info_seasons, info_matchs_goal, not_current_season_and_already_stored
 
-def scrape_and_store_matches():
 def handle_cookies():
     """Gère la bannière des cookies."""
     try:
