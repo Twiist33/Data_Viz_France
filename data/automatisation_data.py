@@ -485,7 +485,6 @@ def scrape_and_store_goals():
         except Exception:
             pass  # Ignorer si aucune bannière n'est présente
 
-
     def fetch_match_data(id_match):
         try:
             response = os.popen(
@@ -526,8 +525,7 @@ def scrape_and_store_goals():
             match_goal_df[f'away_{start}_{end}'] = 0
 
         if goals.empty:
-            # Aucun but, retourner directement
-            return match_goal_df
+            return match_goal_df # Aucun but, retourner directement
 
         # Si des buts existent, vérifier les intervalles
         for start, end in time_intervals:
