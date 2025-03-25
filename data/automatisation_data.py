@@ -473,7 +473,172 @@ def scrape_and_store_matches():
     finally:
         driver.quit()
 
+def handle_cookies_banner(driver):
+    try:
+        cookies_button = WebDriverWait(driver, 2).until(
+            EC.element_to_be_clickable((By.CLASS_NAME, "fc-cta-consent"))
+        )
+        cookies_button.click()
+        print("Bannière de cookies fermée.")
+    except Exception:
+        pass  # Ignorer si aucune bannière n'est présente
 
+def fetch_match_data(id_match):
+    try:
+        response = os.popen(
+            f'curl -H "Host: api.sofascore.com" -H "Accept: */*" '
+            f'-H "User-Agent: curl/8.1.2" https://api.sofascore.com/api/v1/event/{id_match}/incidents'
+        ).read()
+        return json.loads(response)['incidents']
+    except Exception as e:
+        print(f"Erreur lors de la récupération des incidents pour {id_match} : {e}")
+        return []
+
+def extract_match_scores(incidents):
+    infos_score_match = pd.DataFrame(incidents)[pd.DataFrame(incidents)['text'] == 'FT']
+    score_home = infos_score_match['homeScore'].values[0] if not infos_score_match.empty else None
+    score_away = infos_score_match['awayScore'].values[0] if not infos_score_match.empty else None
+        
+    # Vérification et conversion
+    score_home = int(score_home) if score_home is not None else 0
+    score_away = int(score_away) if score_away is not None else 0
+
+    return score_home, score_away
+
+def calculate_result(score_home, score_away):
+    if score_home == score_away:
+        return 0  # Match nul
+    return 1 if score_home > score_away else 2  # Victoire domicile ou extérieur
+
+def calculate_time_intervals(incidents, match_goal_df):
+    """
+    Calcule le nombre de buts par intervalles de temps et met à jour le DataFrame match_goal_df.
+    """
+    time_intervals = [(0, 15), (16, 30), (31, 45), (46, 60), (61, 75), (76, 90)]
+    incidents_df = pd.DataFrame(incidents)
+    goals = incidents_df[incidents_df['incidentType'] == 'goal']
+
+    # Initialisation des colonnes à 0 par défaut
+    for start, end in time_intervals:
+        match_goal_df[f'home_{start}_{end}'] = 0
+        match_goal_df[f'away_{start}_{end}'] = 0
+
+    if goals.empty:
+        return match_goal_df # Aucun but, retourner directement
+
+    # Si des buts existent, vérifier les intervalles
+    for start, end in time_intervals:
+        home_goals = goals[
+            (goals['time'] >= start) &
+            (goals['time'] <= end) &
+            (goals['isHome'] == True)
+        ]
+        away_goals = goals[
+            (goals['time'] >= start) &
+            (goals['time'] <= end) &
+            (goals['isHome'] == False)
+        ]
+
+        match_goal_df[f'home_{start}_{end}'] = len(home_goals)
+        match_goal_df[f'away_{start}_{end}'] = len(away_goals)
+
+    return match_goal_df
+
+def calculate_first_goal(goals, match_goal_df):
+    if goals.empty:
+        match_goal_df['squad_1st_goal'] = 0
+    else:
+        first_goal = goals.sort_values(by='time').iloc[0]
+        match_goal_df['squad_1st_goal'] = 1 if first_goal['isHome'] else 2
+
+    return match_goal_df
+
+def process_match(info_match, driver):
+    id_match, relative_url, id_season = info_match
+    url_match = f'https://www.sofascore.com{relative_url}'
+        
+    id_match = int(id_match)
+        
+    try:
+        driver.get(url_match)
+    except TimeoutException:
+        print(f"Timeout lors du chargement de la page : {url_match}")
+            
+        # Optionnel : Limite de tentatives pour éviter une boucle infinie
+        max_retries = 3
+        for i in range(max_retries):
+            try:
+                driver.quit()
+                driver = init_webdriver()
+                driver.get(url_match)
+                print(f"Tentative {i+1}/{max_retries} réussie.")
+                break  # Sortir de la boucle si succès
+            except TimeoutException:
+                print(f"Tentative {i+1}/{max_retries} échouée.")
+        else:
+            print("Échec après plusieurs tentatives. Abandon.")
+
+    handle_cookies_banner(driver)
+
+    incidents = fetch_match_data(id_match)
+    if not incidents:
+        return None
+
+    score_home, score_away = extract_match_scores(incidents)
+    result = calculate_result(score_home, score_away)
+
+    match_goal_df = pd.DataFrame({'id_match': [id_match], 'score_home': [score_home], 'score_away': [score_away], 'result': [result], 'id_season': [id_season]})
+    match_goal_df = calculate_time_intervals(incidents, match_goal_df)
+        
+    goals = pd.DataFrame(incidents)[pd.DataFrame(incidents)['incidentType'] == 'goal']
+    match_goal_df = calculate_first_goal(goals, match_goal_df)
+        
+    return match_goal_df
+
+# Fonction principale avec réinitialisation du WebDriver
+def extract_goals(info_matchs, info_matchs_season, supabase, info_matchs_goal, not_current_season_and_already_stored, reset_interval=10):
+
+    # Ajouter une étape pour ignorer les matchs des saisons déjà enregistrées et terminées
+    filtered_matches = [match for match in info_matchs if match[2] not in not_current_season_and_already_stored]
+
+    filtered_matches = [match for match in filtered_matches if match[0] not in info_matchs_goal]
+
+    print(f"Nombre de matchs à traiter après filtrage : {len(filtered_matches)}")
+
+    if not filtered_matches:
+        print("Aucun match à traiter pour les saisons sélectionnées.")
+        return  # Arrêter l'exécution si aucun match n'est à traiter
+
+    matchs = []
+    driver = init_webdriver()    
+
+    try:
+        # Utilisation de tqdm pour afficher la progression
+        for i, info_match in enumerate(tqdm(filtered_matches, desc="Traitement des matchs", unit="match")):
+            # Réinitialiser le WebDriver périodiquement
+            if i > 0 and i % reset_interval == 0:
+                driver.quit()
+                driver = init_webdriver()
+
+            try:
+                # Traiter un match individuel
+                match_goal_df = process_match(info_match, driver)
+                if match_goal_df is not None:
+                    matchs.append(match_goal_df)
+            except Exception as e:
+                print(f"Erreur lors du traitement du match {info_match[0]} : {e}")
+                continue  # Continuer avec le prochain match en cas d'erreur
+    finally:
+        # S'assurer que le WebDriver est fermé même en cas d'erreur
+        driver.quit()
+
+    # Combiner toutes les données collectées
+    if matchs:
+        all_matches_df = pd.concat(matchs, ignore_index=True)
+        print("Insertion des informations de buts pour tous les matchs...")
+        insert_goals(all_matches_df, supabase)
+    else:
+        print("Aucune donnée à insérer.")
 
 # Fonction pour récupérer les informations sur les buts
 def scrape_and_store_goals():
@@ -486,6 +651,7 @@ def scrape_and_store_goals():
     supabase = connect_to_supabase()
     if not supabase:
         return
+
     # On effectue la requête pour obtenir les liens url des matchs
     cursor = conn.cursor()
     cursor.execute("""
@@ -503,6 +669,7 @@ def scrape_and_store_goals():
     """)
 
     info_matchs_season = cursor.fetchall()
+    
     # On effectue la requête pour obtenir les identifiants des matchs dejà dans la base
     cursor.execute("SELECT id_match FROM info_goal;")
     info_matchs_goal = {row[0] for row in cursor.fetchall()}  # Conversion en set d'entiers
@@ -510,173 +677,6 @@ def scrape_and_store_goals():
     # On effectue la requête pour obtenir les identifiants des matchs dejà dans la base
     cursor.execute("SELECT DISTINCT s.id_season FROM season s JOIN info_match im ON s.id_season = im.id_season WHERE s.season_name NOT LIKE '%24/25%' AND s.season_name NOT LIKE '%2024/25%';")
     not_current_season_and_already_stored = {row[0] for row in cursor.fetchall()}  # Conversion en set d'entiers
-
-    def handle_cookies_banner(driver):
-        try:
-            cookies_button = WebDriverWait(driver, 2).until(
-                EC.element_to_be_clickable((By.CLASS_NAME, "fc-cta-consent"))
-            )
-            cookies_button.click()
-            print("Bannière de cookies fermée.")
-        except Exception:
-            pass  # Ignorer si aucune bannière n'est présente
-
-    def fetch_match_data(id_match):
-        try:
-            response = os.popen(
-                f'curl -H "Host: api.sofascore.com" -H "Accept: */*" '
-                f'-H "User-Agent: curl/8.1.2" https://api.sofascore.com/api/v1/event/{id_match}/incidents'
-            ).read()
-            return json.loads(response)['incidents']
-        except Exception as e:
-            print(f"Erreur lors de la récupération des incidents pour {id_match} : {e}")
-            return []
-
-    def extract_match_scores(incidents):
-        infos_score_match = pd.DataFrame(incidents)[pd.DataFrame(incidents)['text'] == 'FT']
-        score_home = infos_score_match['homeScore'].values[0] if not infos_score_match.empty else None
-        score_away = infos_score_match['awayScore'].values[0] if not infos_score_match.empty else None
-        
-        # Vérification et conversion
-        score_home = int(score_home) if score_home is not None else 0
-        score_away = int(score_away) if score_away is not None else 0
-
-        return score_home, score_away
-
-    def calculate_result(score_home, score_away):
-        if score_home == score_away:
-            return 0  # Match nul
-        return 1 if score_home > score_away else 2  # Victoire domicile ou extérieur
-    def calculate_time_intervals(incidents, match_goal_df):
-        """
-        Calcule le nombre de buts par intervalles de temps et met à jour le DataFrame match_goal_df.
-        """
-        time_intervals = [(0, 15), (16, 30), (31, 45), (46, 60), (61, 75), (76, 90)]
-        incidents_df = pd.DataFrame(incidents)
-        goals = incidents_df[incidents_df['incidentType'] == 'goal']
-
-        # Initialisation des colonnes à 0 par défaut
-        for start, end in time_intervals:
-            match_goal_df[f'home_{start}_{end}'] = 0
-            match_goal_df[f'away_{start}_{end}'] = 0
-
-        if goals.empty:
-            return match_goal_df # Aucun but, retourner directement
-
-        # Si des buts existent, vérifier les intervalles
-        for start, end in time_intervals:
-            home_goals = goals[
-                (goals['time'] >= start) &
-                (goals['time'] <= end) &
-                (goals['isHome'] == True)
-            ]
-            away_goals = goals[
-                (goals['time'] >= start) &
-                (goals['time'] <= end) &
-                (goals['isHome'] == False)
-            ]
-
-
-            match_goal_df[f'home_{start}_{end}'] = len(home_goals)
-            match_goal_df[f'away_{start}_{end}'] = len(away_goals)
-
-        return match_goal_df
-
-    def calculate_first_goal(goals, match_goal_df):
-        if goals.empty:
-            match_goal_df['squad_1st_goal'] = 0
-        else:
-            first_goal = goals.sort_values(by='time').iloc[0]
-            match_goal_df['squad_1st_goal'] = 1 if first_goal['isHome'] else 2
-
-        return match_goal_df
-
-    def process_match(info_match, driver):
-        id_match, relative_url, id_season = info_match
-        url_match = f'https://www.sofascore.com{relative_url}'
-        
-        id_match = int(id_match)
-        
-        try:
-            driver.get(url_match)
-        except TimeoutException:
-            print(f"Timeout lors du chargement de la page : {url_match}")
-            
-            # Optionnel : Limite de tentatives pour éviter une boucle infinie
-            max_retries = 3
-            for i in range(max_retries):
-                try:
-                    driver.quit()
-                    driver = init_webdriver()
-                    driver.get(url_match)
-                    print(f"Tentative {i+1}/{max_retries} réussie.")
-                    break  # Sortir de la boucle si succès
-                except TimeoutException:
-                    print(f"Tentative {i+1}/{max_retries} échouée.")
-            else:
-                print("Échec après plusieurs tentatives. Abandon.")
-
-        handle_cookies_banner(driver)
-
-        incidents = fetch_match_data(id_match)
-        if not incidents:
-            return None
-
-        score_home, score_away = extract_match_scores(incidents)
-        result = calculate_result(score_home, score_away)
-
-        match_goal_df = pd.DataFrame({'id_match': [id_match], 'score_home': [score_home], 'score_away': [score_away], 'result': [result], 'id_season': [id_season]})
-        match_goal_df = calculate_time_intervals(incidents, match_goal_df)
-        
-        goals = pd.DataFrame(incidents)[pd.DataFrame(incidents)['incidentType'] == 'goal']
-        match_goal_df = calculate_first_goal(goals, match_goal_df)
-        
-        return match_goal_df
-
-    # Fonction principale avec réinitialisation du WebDriver
-    def extract_goals(info_matchs, info_matchs_season, supabase, info_matchs_goal, not_current_season_and_already_stored, reset_interval=10):
-
-        # Ajouter une étape pour ignorer les matchs des saisons déjà enregistrées et terminées
-        filtered_matches = [match for match in info_matchs if match[2] not in not_current_season_and_already_stored]
-
-        filtered_matches = [match for match in filtered_matches if match[0] not in info_matchs_goal]
-
-        print(f"Nombre de matchs à traiter après filtrage : {len(filtered_matches)}")
-
-        if not filtered_matches:
-            print("Aucun match à traiter pour les saisons sélectionnées.")
-            return  # Arrêter l'exécution si aucun match n'est à traiter
-
-        matchs = []
-        driver = init_webdriver()    
-
-        try:
-            # Utilisation de tqdm pour afficher la progression
-            for i, info_match in enumerate(tqdm(filtered_matches, desc="Traitement des matchs", unit="match")):
-                # Réinitialiser le WebDriver périodiquement
-                if i > 0 and i % reset_interval == 0:
-                    driver.quit()
-                    driver = init_webdriver()
-
-                try:
-                    # Traiter un match individuel
-                    match_goal_df = process_match(info_match, driver)
-                    if match_goal_df is not None:
-                        matchs.append(match_goal_df)
-                except Exception as e:
-                    print(f"Erreur lors du traitement du match {info_match[0]} : {e}")
-                    continue  # Continuer avec le prochain match en cas d'erreur
-        finally:
-            # S'assurer que le WebDriver est fermé même en cas d'erreur
-            driver.quit()
-
-        # Combiner toutes les données collectées
-        if matchs:
-            all_matches_df = pd.concat(matchs, ignore_index=True)
-            print("Insertion des informations de buts pour tous les matchs...")
-            insert_goals(all_matches_df, supabase)
-        else:
-            print("Aucune donnée à insérer.")
 
     extract_goals(info_matchs, info_matchs_season, supabase, info_matchs_goal,not_current_season_and_already_stored)
 
