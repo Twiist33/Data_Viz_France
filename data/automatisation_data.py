@@ -362,43 +362,60 @@ def scrape_and_store_matches():
             print("Aucune bannière de cookies détectée.")
     
     def extract_matches_and_teams(id_season):
-        """Extrait les matchs et équipes pour toutes les journées."""
+        """Extrait les matchs, les équipes et les dates pour toutes les journées disponibles."""
         while True:
             try:
-                WebDriverWait(driver, 10).until(
+                # Attendre le chargement des matchs de la journée courante
+                target_div = WebDriverWait(driver, 10).until(
                     EC.presence_of_element_located((By.CLASS_NAME, "TabPanel.bpHovE"))
                 )
                 html_content = driver.page_source
                 soup = BeautifulSoup(html_content, 'html.parser')
 
-                if soup.find('span', class_='Text rJhVM') and soup.find('span', class_='Text rJhVM').text.strip() == "Tour 1":
+                # Vérifier si c'est la première journée (Tour 1)
+                tour_info = soup.find('span', class_='Text rJhVM')
+                if tour_info and tour_info.text.strip() == "Tour 1":
                     break
 
+                # Extraction des matchs
                 for link in soup.find_all('a', {"data-testid": "event_cell"}):
                     href = link.get('href')
                     if not href:
                         continue
 
+                    # ID du match
                     id_match = int(link.get('data-id'))
+
+                    # Vérifier si le match est déjà collecté
+                    if id_match in info_matchs_goal:
+                        continue
+
+                    # Vérifier si le match n'est pas valide
                     event_status = link.find('bdi', {'class': 'Text fgUtAL'})
-                    event_status_tv = link.find('bdi', {'class': 'Text kkVniA'})
-                    if (event_status and any(status in event_status.text.strip() for status in ["Reporté", "Abandon", "Annulé"])) or \
-                       (event_status_tv and any(status in event_status_tv.text.strip() for status in ["Tapis vert"])):
+                    if event_status and any(status in event_status.text.strip() for status in ["Reporté", "Abandon", "Annulé"]):
                         continue
                     
+                    event_status_tv = link.find('bdi', {'class': 'Text kkVniA'})
+                    if event_status_tv and any(status in event_status_tv.text.strip() for status in ["Tapis vert"]):
+                        continue
+
+                    # Date du match
                     event_time_element = link.find('bdi', {'class': 'Text kcRyBI'})
                     match_date = None
                     if event_time_element:
+                        event_text = event_time_element.text.strip()
                         try:
-                            match_date = datetime.strptime(event_time_element.text.strip().split()[0], "%d/%m/%y").strftime("%Y-%m-%d")
+                            match_date = datetime.strptime(event_text.split()[0], "%d/%m/%y").strftime("%Y-%m-%d")
                         except ValueError:
                             continue
-                    
+
+                    # Équipes et ID
                     id_home_team = link.find('div', {'data-testid': 'left_team'}).find('img')['src'].split('/')[-3]
                     id_away_team = link.find('div', {'data-testid': 'right_team'}).find('img')['src'].split('/')[-3]
                     team_home_name = link.find('div', {'data-testid': 'left_team'}).find('bdi').text.strip()
                     team_away_name = link.find('div', {'data-testid': 'right_team'}).find('bdi').text.strip()
-                    
+
+                    # Ajouter les matchs et les équipes
                     matches.append({
                         'id_match': id_match,
                         'id_season': id_season,
@@ -410,14 +427,17 @@ def scrape_and_store_matches():
                     teams.append({'id_team': id_home_team, 'team_name': team_home_name})
                     teams.append({'id_team': id_away_team, 'team_name': team_away_name})
 
-                previous_button = driver.find_elements(By.XPATH, "//div[contains(@class, 'Box Flex')]/button[contains(@class, 'Button') and contains(@style, 'visible')][1]")
+                # Vérifier si le bouton "Précédent" est disponible
+                previous_button = driver.find_element(By.XPATH, 
+                    "//div[contains(@class, 'Box Flex')]/button[contains(@class, 'Button') and contains(@style, 'visible')][1]"
+                )
                 if previous_button:
-                    previous_button[0].click()
-                    time.sleep(3)
+                    previous_button.click()
+                    time.sleep(3)  # Attendre le chargement de la journée précédente
                 else:
                     print("Aucun bouton 'Précédent' disponible. Fin de l'extraction pour cette saison.")
                     break
-            except Exception:
+            except Exception as e:
                 break
 
     def process_season(info_season):
