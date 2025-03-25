@@ -359,20 +359,16 @@ def scrape_and_store_matches():
         while True:
             try:
                 # Attendre le chargement des matchs de la journée courante
-                target_div = WebDriverWait(driver, 20).until(
+                target_div = WebDriverWait(driver, 10).until(
                     EC.presence_of_element_located((By.CLASS_NAME, "TabPanel.bpHovE"))
                 )
                 html_content = driver.page_source
                 soup = BeautifulSoup(html_content, 'html.parser')
-                
+
                 # Vérifier si c'est la première journée (Tour 1)
                 tour_info = soup.find('span', class_='Text rJhVM')
-                if tour_info:
-                    print("✅ Élément trouvé:", tour_info.text.strip())
-                else:
-                    print("❌ Élément non trouvé !")
 
-
+                print(tour_info.text.strip())
                 if tour_info and tour_info.text.strip() == "Tour 1":
                     break
 
@@ -388,7 +384,6 @@ def scrape_and_store_matches():
                     # Vérifier si le match est déjà collecté
                     if id_match in info_matchs_goal:
                         continue
-
                     # Vérifier si le match n'est pas valide
                     event_status = link.find('bdi', {'class': 'Text fgUtAL'})
                     if event_status and any(status in event_status.text.strip() for status in ["Reporté", "Abandon", "Annulé"]):
@@ -425,7 +420,6 @@ def scrape_and_store_matches():
                     })
                     teams.append({'id_team': id_home_team, 'team_name': team_home_name})
                     teams.append({'id_team': id_away_team, 'team_name': team_away_name})
-
                 # Vérifier si le bouton "Précédent" est disponible
                 previous_button = driver.find_element(By.XPATH, 
                     "//div[contains(@class, 'Box Flex')]/button[contains(@class, 'Button') and contains(@style, 'visible')][1]"
@@ -439,6 +433,7 @@ def scrape_and_store_matches():
             except Exception as e:
                 print(f"Erreur : {e}")
                 break
+
 
     def process_season(info_season):
         """Traite les données d'une saison complète."""
@@ -458,7 +453,7 @@ def scrape_and_store_matches():
         # Extraire les matchs pour toutes les journées
         extract_matches_and_teams(id_season)
     
-    def store_matches():
+    def main_store():
         try:
             # Pour collecter les matchs et les équipes provenant de la table des saisons
             for info_season in info_seasons:
@@ -478,7 +473,7 @@ def scrape_and_store_matches():
         finally:
             driver.quit()
     
-    store_matches()
+    main_store()
 
 
 # Fonction pour récupérer les informations sur les buts
