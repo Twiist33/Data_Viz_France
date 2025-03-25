@@ -324,8 +324,18 @@ def scrape_and_store_seasons():
 
 # Fonction pour récupérer les informations sur les matchs
 def scrape_and_store_matches():
-    
+
+    # 🔹 Connexion à la base PostgreSQL et Supabase
+    conn = connect_to_db()
+    if not conn:
+        return
+
+    supabase = connect_to_supabase()
+    if not supabase:
+        return
+
     cursor = conn.cursor()
+
     cursor.execute("SELECT id_season, link_url FROM season;")
     info_seasons = cursor.fetchall()
 
@@ -449,7 +459,15 @@ def scrape_and_store_matches():
 
 # Fonction pour récupérer les informations sur les buts
 def scrape_and_store_goals():
+    
+    # 🔹 Connexion à la base PostgreSQL et Supabase
+    conn = connect_to_db()
+    if not conn:
+        return
 
+    supabase = connect_to_supabase()
+    if not supabase:
+        return
     # On effectue la requête pour obtenir les liens url des matchs
     cursor = conn.cursor()
     cursor.execute("""
