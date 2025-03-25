@@ -363,6 +363,7 @@ def scrape_and_store_matches():
                     EC.presence_of_element_located((By.CLASS_NAME, "TabPanel.bpHovE"))
                 )
                 html_content = driver.page_source
+                print(html_content)
                 soup = BeautifulSoup(html_content, 'html.parser')
 
                 # Vérifier si c'est la première journée (Tour 1)
