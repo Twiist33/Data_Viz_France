@@ -302,7 +302,7 @@ def scrape_and_store_seasons():
     
         # Vérifier les saisons extraites
         if not seasons:
-            print("La liste 'seasons' est vide. Aucune donnée n'a été extraite.")
+            print("Aucune nouvelle saison")
         else:
             print(f"Nombre de saisons extraites : {len(seasons)}")
         # Convertir les saisons en DataFrame
@@ -362,9 +362,11 @@ def scrape_and_store_matches():
                 target_div = WebDriverWait(driver, 10).until(
                     EC.presence_of_element_located((By.CLASS_NAME, "TabPanel.bpHovE"))
                 )
+                print(target_div)
                 html_content = driver.page_source
+                print(html_content)
                 soup = BeautifulSoup(html_content, 'html.parser')
-
+                print(soup)
                 # Vérifier si c'est la première journée (Tour 1)
                 tour_info = soup.find('span', class_='Text rJhVM')
                 print(tour_info.text.strip())
