@@ -9,6 +9,7 @@ from supabase import create_client
 from dotenv import load_dotenv
 from decimal import Decimal
 import plotly.express as px
+import numpy as np
 
 st.set_page_config(page_title="Data Viz ⚽ 🇫🇷", page_icon="📊", layout="wide") # Configuration de la page Streamlit
 
@@ -313,64 +314,58 @@ if teams_available:
                                 df_home = df_first_goal[df_first_goal["Équipe"] == selected_team_home].iloc[:, 2:]
                                 df_away = df_first_goal[df_first_goal["Équipe"] == selected_team_away].iloc[:, 2:]
 
-                                fig, axes = plt.subplots(4, 3, figsize=(18, 16))  # 4 lignes et 3 colonnes
+                                # Liste des graphiques non vides
+                                graphs_to_plot = [
+                                    (df_home.iloc[0, :3], ["1er but inscrit", "Aucun but", "1er but encaissé"], f"1er but - {selected_team_home}"),
+                                    (df_home.iloc[0, 9:12], ["Victoire", "Nul", "Défaite"], f"Résultats après 1er but inscrit - {selected_team_home}"),
+                                    (df_home.iloc[0, 18:21], ["Victoire", "Nul", "Défaite"], f"Résultats après 1er but encaissé - {selected_team_home}"),
+                                    (df_home.iloc[0, 3:6], ["Domicile / 1er but inscrit", "Domicile / Aucun but", "Domicile / 1er but encaissé"], f"Résultats à domicile - {selected_team_home}"),
+                                    (df_home.iloc[0, 12:15], ["Domicile / Victoire", "Domicile / Nul", "Domicile / Défaite"], f"Domicile après 1er but inscrit - {selected_team_home}"),
+                                    (df_home.iloc[0, 21:24], ["Victoire", "Nul", "Défaite"], f"Domicile après 1er but encaissé - {selected_team_home}"),
+                                    (df_away.iloc[0, :3], ["1er but inscrit", "Aucun but", "1er but encaissé"], f"1er but - {selected_team_away}"),
+                                    (df_away.iloc[0, 9:12], ["Victoire", "Nul", "Défaite"], f"Résultats après 1er but inscrit - {selected_team_away}"),
+                                    (df_away.iloc[0, 18:21], ["Victoire", "Nul", "Défaite"], f"Résultats après 1er but encaissé - {selected_team_away}"),
+                                    (df_away.iloc[0, 6:9], ["Extérieur / 1er but inscrit", "Extérieur / Aucun but", "Extérieur / 1er but encaissé"], f"Résultats à l'extérieur - {selected_team_away}"),
+                                    (df_away.iloc[0, 15:18], ["Extérieur / Victoire", "Extérieur / Nul", "Extérieur / Défaite"], f"Extérieur après 1er but inscrit - {selected_team_away}"),
+                                    (df_away.iloc[0, 24:], ["Victoire", "Nul", "Défaite"], f"Extérieur après 1er but encaissé - {selected_team_away}")
+                                ]
+
+                                # Filtrer les graphiques avec des données non nulles
+                                graphs_to_plot = [graph for graph in graphs_to_plot if graph[0].sum() > 0]
+
+                                # Déterminer le nombre de lignes nécessaires (3 graphiques par ligne)
+                                num_graphs = len(graphs_to_plot)
+                                num_rows = -(-num_graphs // 3)  # Équivalent à math.ceil(num_graphs / 3)
+
+                                if num_rows == 0:
+                                    st.write("Aucune donnée disponible pour afficher les graphiques.")
+                                else:
+                                    # Création des subplots
+                                    fig, axes = plt.subplots(num_rows, 3, figsize=(18, 4 * num_rows))
+                                    axes = np.atleast_2d(axes)  # Garantir une structure 2D même si num_rows == 1
+
+                                    # Fonction de tracé des graphiques
+                                    def plot_pie_chart(ax, data, labels, title):
+                                        if data.sum() > 0:
+                                            ax.pie(data, labels=labels, autopct='%1.2f%%', startangle=90, colors=["#2ecc71", "#95a5a6", "#e74c3c"])
+                                            ax.set_title(title)
+                                        else:
+                                            ax.axis('off')  # Cacher l'axe si aucune donnée
+
+                                    # Remplissage des subplots
+                                    for idx, (data, labels, title) in enumerate(graphs_to_plot):
+                                        row, col = divmod(idx, 3)  # Convertir index en position (ligne, colonne)
+                                        plot_pie_chart(axes[row, col], data, labels, title)
                                     
-                                # Graphiques pour l'équipe à domicile
-                                # 1ère ligne
-                                axes[0, 0].pie(df_home.iloc[0, :3], labels=["1er but inscrit", "Aucun but", "1er but encaissé"],
-                                                autopct='%1.2f%%', startangle=90, colors=["#2ecc71", "#95a5a6", "#e74c3c"])
-                                axes[0, 0].set_title(f"1er but - {selected_team_home}")
+                                    # Masquer les axes restants non utilisés
+                                    for idx in range(num_graphs, num_rows * 3):
+                                        row, col = divmod(idx, 3)
+                                        axes[row, col].axis("off")
 
-                                axes[0, 1].pie(df_home.iloc[0, 9:12], labels=["Victoire", "Nul", "Défaite"],
-                                                autopct='%1.2f%%', startangle=90, colors=["#2ecc71", "#f1c40f", "#e74c3c"])
-                                axes[0, 1].set_title(f"Résultats après 1er but inscrit - {selected_team_home}")
+                                    # Ajustement du layout
+                                    plt.tight_layout()
+                                    st.pyplot(fig)
 
-                                axes[0, 2].pie(df_home.iloc[0, 18:21], labels=["Victoire", "Nul", "Défaite"],
-                                                autopct='%1.2f%%', startangle=90, colors=["#2ecc71", "#f1c40f", "#e74c3c"])
-                                axes[0, 2].set_title(f"Résultats après 1er but encaissé - {selected_team_home}")
-
-                                # 2ème ligne
-                                axes[1, 0].pie(df_home.iloc[0, 3:6], labels=["Domicile / 1er but inscrit", "Domicile / Aucun but", "Domicile / 1er but encaissé"],
-                                                autopct='%1.2f%%', startangle=90, colors=["#2ecc71", "#95a5a6", "#e74c3c"])
-                                axes[1, 0].set_title(f"Résultats à domicile - {selected_team_home}")
-                                    
-                                axes[1, 1].pie(df_home.iloc[0, 12:15], labels=["Domicile / Victoire", "Domicile / Nul", "Domicile / Défaite"],
-                                                autopct='%1.2f%%', startangle=90, colors=["#2ecc71", "#f1c40f", "#e74c3c"])
-                                axes[1, 1].set_title(f"Domicile après 1er but inscrit - {selected_team_home}")
-
-                                axes[1, 2].pie(df_home.iloc[0, 21:24], labels=["Victoire", "Nul", "Défaite"],
-                                                autopct='%1.2f%%', startangle=90, colors=["#2ecc71", "#f1c40f", "#e74c3c"])
-                                axes[1, 2].set_title(f"Domicile après 1er but encaissé - {selected_team_home}")
-
-                                # Graphiques pour l'équipe à l'extérieur
-                                # 3ème ligne
-                                axes[2, 0].pie(df_away.iloc[0, :3], labels=["1er but inscrit", "Aucun but", "1er but encaissé"],
-                                                autopct='%1.2f%%', startangle=90, colors=["#2ecc71", "#95a5a6", "#e74c3c"])
-                                axes[2, 0].set_title(f"1er but - {selected_team_away}")
-
-                                axes[2, 1].pie(df_away.iloc[0, 9:12], labels=["Victoire", "Nul", "Défaite"],
-                                                autopct='%1.2f%%', startangle=90, colors=["#2ecc71", "#f1c40f", "#e74c3c"])
-                                axes[2, 1].set_title(f"Résultats après 1er but inscrit - {selected_team_away}")
-
-                                axes[2, 2].pie(df_away.iloc[0, 18:21], labels=["Victoire", "Nul", "Défaite"],
-                                                autopct='%1.2f%%', startangle=90, colors=["#2ecc71", "#f1c40f", "#e74c3c"])
-                                axes[2, 2].set_title(f"Résultats après 1er but encaissé - {selected_team_away}")                               
-
-                                # 4ème ligne
-                                axes[3, 0].pie(df_away.iloc[0, 6:9], labels=["Extérieur / 1er but inscrit", "Extérieur / Aucun but", "Extérieur / 1er but encaissé"],
-                                                autopct='%1.2f%%', startangle=90, colors=["#2ecc71", "#95a5a6", "#e74c3c"])
-                                axes[3, 0].set_title(f"Résultats à l'extérieur - {selected_team_away}")
-                                    
-                                axes[3, 1].pie(df_away.iloc[0, 15:18], labels=["Extérieur / Victoire", "Extérieur / Nul", "Extérieur / Défaite"],
-                                                    autopct='%1.2f%%', startangle=90, colors=["#2ecc71", "#f1c40f", "#e74c3c"])
-                                axes[3, 1].set_title(f"Extérieur après 1er but inscrit - {selected_team_away}")
-
-                                axes[3, 2].pie(df_away.iloc[0, 24:], labels=["Victoire", "Nul", "Défaite"],
-                                                autopct='%1.2f%%', startangle=90, colors=["#2ecc71", "#f1c40f", "#e74c3c"])
-                                axes[3, 2].set_title(f"Extérieur après 1er but encaissé - {selected_team_away}")                           
-
-                                plt.tight_layout() # On affiche les graphiques
-                                st.pyplot(fig)
 
                         # Affichage des graphiques relatifs à la section Distribution des buts
                         elif section == "Distribution des buts":
@@ -408,49 +403,82 @@ if teams_available:
                                 # Séparation des données pour l'équipe à domicile et à l'extérieur
                                 distrib_goal_home = distrib_goal_team[distrib_goal_team["Équipe"] == selected_team_home].iloc[:, 1:]
                                 distrib_goal_away = distrib_goal_team[distrib_goal_team["Équipe"] == selected_team_away].iloc[:, 1:]
-                                
-                                # Création d'une fonction pour générer les graphiques de distribution de buts par équipe
+
+                                # Création d'une fonction pour construire les graphiques de distribution de buts par équipe (dans le cas où des buts sont inscrits)
                                 def plot_distribution_graphs(data, title_prefix):
-                                    fig, axes = plt.subplots(2, 2, figsize=(15, 10))
+                                    # Vérifier la présence de données non nulles pour chaque graphique
+                                    has_goal_scored_half = data.iloc[0, :2].sum() > 0
+                                    has_goal_conceded_half = data.iloc[0, 8:10].sum() > 0
+                                    has_goal_scored_intervals = data.iloc[0, 2:8].sum() > 0
+                                    has_goal_conceded_intervals = data.iloc[0, 10:16].sum() > 0
                                     
-                                    # Proportions des buts inscrits par période
-                                    labels_proportion = ["1ère période", "2ème période"]
-                                    values_proportion_goal_scored = data.iloc[0, :2]
-                                    axes[0, 0].pie(values_proportion_goal_scored, labels=labels_proportion, autopct='%1.2f%%', startangle=90, colors=["lightblue", "lightcoral"])
-                                    axes[0, 0].set_title(f"{title_prefix} - Proportion des buts inscrits par période")
+                                    # Déterminer le nombre de graphiques à afficher
+                                    graphs = [
+                                        has_goal_scored_half,
+                                        has_goal_conceded_half,
+                                        has_goal_scored_intervals,
+                                        has_goal_conceded_intervals
+                                    ]
                                     
-                                    # Proportions des buts concédés par période
-                                    values_proportion_goal_conceded = data.iloc[0, 8:10]
-                                    axes[0, 1].pie(values_proportion_goal_conceded, labels=labels_proportion, autopct='%1.2f%%', startangle=90, colors=["lightblue", "lightcoral"])
-                                    axes[0, 1].set_title(f"{title_prefix} - Proportion des buts concédés par période")
+                                    num_graphs = sum(graphs)  # Nombre de graphiques valides
+                                    num_rows = (num_graphs + 1) // 2  # Nombre de lignes nécessaires (2 graphiques max par ligne)
                                     
-                                    # Proportions des buts inscrits par intervalle de 15 min
-                                    labels_intervals = ["0-15 min", "16-30 min", "31-45 min", "46-60 min", "61-75 min", "76-90 min"]
-                                    values_intervals_goal_scored = data.iloc[0, 2:8]
-                                    colors = ["#D4EFDF", "#A9DFBF", "#F9E79F", "#F5CBA7", "#E59866", "#DC7633"]
-                                    bars1 = axes[1, 0].bar(labels_intervals, values_intervals_goal_scored, color=colors)
-                                    axes[1, 0].set_title(f"{title_prefix} - Proportion des buts inscrits par intervalle de 15 min")
-                                    axes[1, 0].set_ylabel("%")
-                                    axes[1, 0].set_ylim(0, max(values_intervals_goal_scored) + 5)
+                                    if num_graphs == 0:
+                                        st.write(f"Aucune donnée disponible pour {title_prefix}.")
+                                        return  # Arrêter la fonction si aucun graphique n'est valide
+
+                                    # Création dynamique des sous-graphiques
+                                    fig, axes = plt.subplots(num_rows, 2, figsize=(15, 5 * num_rows))
+                                    axes = axes.flatten()  # Transformer la grille en une liste d'axes
+
+                                    idx = 0  # Index pour positionner chaque graphique
                                     
-                                    # Proportions des buts concédés par intervalle de 15 min
-                                    values_intervals_goal_conceded = data.iloc[0, 10:16]
-                                    bars2 = axes[1, 1].bar(labels_intervals, values_intervals_goal_conceded, color=colors)
-                                    axes[1, 1].set_title(f"{title_prefix} - Proportion des buts concédés par intervalle de 15 min")
-                                    axes[1, 1].set_ylabel("%")
-                                    axes[1, 1].set_ylim(0, max(values_intervals_goal_conceded) + 5)
-                                    
-                                    # Ajout des valeurs sur les barres
-                                    for bars in [bars1, bars2]:
-                                        for bar in bars:
-                                            yval = bar.get_height()
-                                            axes[1, 0 if bars is bars1 else 1].text(bar.get_x() + bar.get_width() / 2, yval + 1, f'{yval:.2f}%', ha='center', color='black')
-                                    
-                                    st.pyplot(fig) # Affichage du tableau
-                                
+                                    # 1️⃣ Proportion des buts inscrits par période
+                                    if has_goal_scored_half:
+                                        labels_proportion = ["1ère période", "2ème période"]
+                                        values_proportion_goal_scored = data.iloc[0, :2]
+                                        axes[idx].pie(values_proportion_goal_scored, labels=labels_proportion, autopct='%1.2f%%', startangle=90, colors=["lightblue", "lightcoral"])
+                                        axes[idx].set_title(f"{title_prefix} - Proportion des buts inscrits par période")
+                                        idx += 1
+
+                                    # 2️⃣ Proportion des buts concédés par période
+                                    if has_goal_conceded_half:
+                                        values_proportion_goal_conceded = data.iloc[0, 8:10]
+                                        axes[idx].pie(values_proportion_goal_conceded, labels=labels_proportion, autopct='%1.2f%%', startangle=90, colors=["lightblue", "lightcoral"])
+                                        axes[idx].set_title(f"{title_prefix} - Proportion des buts concédés par période")
+                                        idx += 1
+
+                                    # 3️⃣ Proportion des buts inscrits par intervalle de 15 min
+                                    if has_goal_scored_intervals:
+                                        labels_intervals = ["0-15 min", "16-30 min", "31-45 min", "46-60 min", "61-75 min", "76-90 min"]
+                                        values_intervals_goal_scored = data.iloc[0, 2:8]
+                                        colors = ["#D4EFDF", "#A9DFBF", "#F9E79F", "#F5CBA7", "#E59866", "#DC7633"]
+                                        bars1 = axes[idx].bar(labels_intervals, values_intervals_goal_scored, color=colors)
+                                        axes[idx].set_title(f"{title_prefix} - Proportion des buts inscrits par intervalle de 15 min")
+                                        axes[idx].set_ylabel("%")
+                                        axes[idx].set_ylim(0, max(values_intervals_goal_scored) + 5)
+                                        idx += 1
+
+                                    # 4️⃣ Proportion des buts concédés par intervalle de 15 min
+                                    if has_goal_conceded_intervals:
+                                        values_intervals_goal_conceded = data.iloc[0, 10:16]
+                                        bars2 = axes[idx].bar(labels_intervals, values_intervals_goal_conceded, color=colors)
+                                        axes[idx].set_title(f"{title_prefix} - Proportion des buts concédés par intervalle de 15 min")
+                                        axes[idx].set_ylabel("%")
+                                        axes[idx].set_ylim(0, max(values_intervals_goal_conceded) + 5)
+                                        idx += 1
+
+                                    # Supprimer les axes restants s'ils existent
+                                    while idx < len(axes):
+                                        fig.delaxes(axes[idx])
+                                        idx += 1
+
+                                    st.pyplot(fig)  # Affichage du graphique
+
                                 # Affichage des graphiques dans l'ordre souhaité (équipe à domicile puis celle à l'extérieur)
                                 plot_distribution_graphs(distrib_goal_home, f"{selected_team_home}")
                                 plot_distribution_graphs(distrib_goal_away, f"{selected_team_away}")
+
 
                         # Affichage des graphiques relatifs à la section Domicile / Extérieur 
                         elif section == "Domicile / Extérieur":
