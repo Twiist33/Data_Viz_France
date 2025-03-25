@@ -364,9 +364,15 @@ def scrape_and_store_matches():
                 )
                 html_content = driver.page_source
                 soup = BeautifulSoup(html_content, 'html.parser')
+                
+                print(soup.prettify())
                 # Vérifier si c'est la première journée (Tour 1)
                 tour_info = soup.find('span', class_='Text rJhVM')
-                print(tour_info.text.strip())
+                if tour_info:
+                    print("✅ Élément trouvé:", tour_info.text.strip())
+                else:
+                    print("❌ Élément non trouvé !")
+
 
                 if tour_info and tour_info.text.strip() == "Tour 1":
                     break
