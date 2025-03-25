@@ -347,7 +347,7 @@ def scrape_and_store_matches():
     not_current_season_and_already_stored = {row[0] for row in cursor.fetchall()}  # Conversion en set d'entiers
     
     # Initialiser le WebDriver
-    driver = init_webdriver()
+    driver = webdriver.Chrome()
 
     matches, teams = [], [] # Création des cellules vides
     
@@ -458,24 +458,28 @@ def scrape_and_store_matches():
         # Extraire les matchs pour toutes les journées
         extract_matches_and_teams(id_season)
     
-    try:
-        # Pour collecter les matchs et les équipes provenant de la table des saisons
-        for info_season in info_seasons:
-            process_season(info_season)
+    def store_matches():
+        try:
+            # Pour collecter les matchs et les équipes provenant de la table des saisons
+            for info_season in info_seasons:
+                process_season(info_season)
 
-        # Convertir les listes en DataFrames et supprimer les doublons
-        matches_df = pd.DataFrame(matches).drop_duplicates(subset=['id_match'])
-        teams_df = pd.DataFrame(teams).drop_duplicates(subset=['id_team'])
+            # Convertir les listes en DataFrames et supprimer les doublons
+            matches_df = pd.DataFrame(matches).drop_duplicates(subset=['id_match'])
+            teams_df = pd.DataFrame(teams).drop_duplicates(subset=['id_team'])
 
-        # Insérer les données dans Supabase
-        print("Insertion des équipes...")
-        insert_teams(teams_df, supabase)
+            # Insérer les données dans Supabase
+            print("Insertion des équipes...")
+            insert_teams(teams_df, supabase)
 
-        print("Insertion des matchs...")
-        insert_matchs(matches_df, supabase)
+            print("Insertion des matchs...")
+            insert_matchs(matches_df, supabase)
 
-    finally:
-        driver.quit()
+        finally:
+            driver.quit()
+    
+    store_matches()
+
 
 # Fonction pour récupérer les informations sur les buts
 def scrape_and_store_goals():
