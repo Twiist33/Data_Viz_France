@@ -359,11 +359,10 @@ def scrape_and_store_matches():
         while True:
             try:
                 # Attendre le chargement des matchs de la journée courante
-                target_div = WebDriverWait(driver, 10).until(
+                target_div = WebDriverWait(driver, 60).until(
                     EC.presence_of_element_located((By.CLASS_NAME, "TabPanel.bpHovE"))
                 )
                 html_content = driver.page_source
-                print(html_content)
                 soup = BeautifulSoup(html_content, 'html.parser')
 
                 # Vérifier si c'est la première journée (Tour 1)
@@ -427,7 +426,7 @@ def scrape_and_store_matches():
                 )
                 if previous_button:
                     previous_button.click()
-                    time.sleep(3)  # Attendre le chargement de la journée précédente
+                    time.sleep(60)  # Attendre le chargement de la journée précédente
                 else:
                     print("Aucun bouton 'Précédent' disponible. Fin de l'extraction pour cette saison.")
                     break
