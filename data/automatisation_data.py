@@ -185,7 +185,6 @@ def init_webdriver():
     chrome_options.add_argument("--disable-gpu")
     chrome_options.add_argument("--no-sandbox")
     chrome_options.add_argument("--disable-dev-shm-usage")
-    chrome_options.add_argument("--log-level=3")  # Désactive les logs inutiles
     
     # Paramètres pour bloquer les images et ne charger que le JavaScript essentiel
     prefs = {
@@ -194,6 +193,8 @@ def init_webdriver():
     }
     chrome_options.add_experimental_option("prefs", prefs)
     return webdriver.Chrome(options=chrome_options)
+
+
 def scrape_and_store_seasons():
     """Scrape les saisons de SofaScore et les stocke dans Supabase."""
     
@@ -320,16 +321,9 @@ def scrape_and_store_seasons():
     finally:
         # Fermer le navigateur
         driver.quit()
-        conn.close()
 
 # Fonction pour récupérer les informations sur les matchs
 def scrape_and_store_matches():
-    conn = connect_to_db()
-    if not conn:
-        return
-    supabase = connect_to_supabase()
-    if not supabase:
-        return
     
     cursor = conn.cursor()
     cursor.execute("SELECT id_season, link_url FROM season;")
@@ -345,10 +339,8 @@ def scrape_and_store_matches():
     # Initialiser le WebDriver
     driver = init_webdriver()
 
-    # Initialiser les listes pour stocker les données
-    matches = []
-    teams = []
-
+    matches, teams = [], [] # Création des cellules vides
+    
     def handle_cookies():
         """Gère la bannière des cookies."""
         try:
@@ -360,60 +352,43 @@ def scrape_and_store_matches():
             print("Aucune bannière de cookies détectée.")
     
     def extract_matches_and_teams(id_season):
-        """Extrait les matchs, les équipes et les dates pour toutes les journées disponibles."""
+        """Extrait les matchs et équipes pour toutes les journées."""
         while True:
             try:
-                # Attendre le chargement des matchs de la journée courante
-                target_div = WebDriverWait(driver, 10).until(
+                WebDriverWait(driver, 10).until(
                     EC.presence_of_element_located((By.CLASS_NAME, "TabPanel.bpHovE"))
                 )
                 html_content = driver.page_source
                 soup = BeautifulSoup(html_content, 'html.parser')
 
-                # Vérifier si c'est la première journée (Tour 1)
-                tour_info = soup.find('span', class_='Text rJhVM')
-                if tour_info and tour_info.text.strip() == "Tour 1":
+                if soup.find('span', class_='Text rJhVM') and soup.find('span', class_='Text rJhVM').text.strip() == "Tour 1":
                     break
 
-                # Extraction des matchs
                 for link in soup.find_all('a', {"data-testid": "event_cell"}):
                     href = link.get('href')
                     if not href:
                         continue
 
-                    # ID du match
                     id_match = int(link.get('data-id'))
-
-                    # Vérifier si le match est déjà collecté
-                    if id_match in info_matchs_goal:
-                        continue
-
-                    # Vérifier si le match n'est pas valide
                     event_status = link.find('bdi', {'class': 'Text fgUtAL'})
-                    if event_status and any(status in event_status.text.strip() for status in ["Reporté", "Abandon", "Annulé"]):
+                    event_status_tv = link.find('bdi', {'class': 'Text kkVniA'})
+                    if (event_status and any(status in event_status.text.strip() for status in ["Reporté", "Abandon", "Annulé"])) or \
+                       (event_status_tv and any(status in event_status_tv.text.strip() for status in ["Tapis vert"])):
                         continue
                     
-                    event_status_tv = link.find('bdi', {'class': 'Text kkVniA'})
-                    if event_status_tv and any(status in event_status_tv.text.strip() for status in ["Tapis vert"]):
-                        continue
-
-                    # Date du match
                     event_time_element = link.find('bdi', {'class': 'Text kcRyBI'})
                     match_date = None
                     if event_time_element:
-                        event_text = event_time_element.text.strip()
                         try:
-                            match_date = datetime.strptime(event_text.split()[0], "%d/%m/%y").strftime("%Y-%m-%d")
+                            match_date = datetime.strptime(event_time_element.text.strip().split()[0], "%d/%m/%y").strftime("%Y-%m-%d")
                         except ValueError:
                             continue
-
-                    # Équipes et ID
+                    
                     id_home_team = link.find('div', {'data-testid': 'left_team'}).find('img')['src'].split('/')[-3]
                     id_away_team = link.find('div', {'data-testid': 'right_team'}).find('img')['src'].split('/')[-3]
                     team_home_name = link.find('div', {'data-testid': 'left_team'}).find('bdi').text.strip()
                     team_away_name = link.find('div', {'data-testid': 'right_team'}).find('bdi').text.strip()
-
-                    # Ajouter les matchs et les équipes
+                    
                     matches.append({
                         'id_match': id_match,
                         'id_season': id_season,
@@ -425,17 +400,14 @@ def scrape_and_store_matches():
                     teams.append({'id_team': id_home_team, 'team_name': team_home_name})
                     teams.append({'id_team': id_away_team, 'team_name': team_away_name})
 
-                # Vérifier si le bouton "Précédent" est disponible
-                previous_button = driver.find_element(By.XPATH, 
-                    "//div[contains(@class, 'Box Flex')]/button[contains(@class, 'Button') and contains(@style, 'visible')][1]"
-                )
+                previous_button = driver.find_elements(By.XPATH, "//div[contains(@class, 'Box Flex')]/button[contains(@class, 'Button') and contains(@style, 'visible')][1]")
                 if previous_button:
-                    previous_button.click()
-                    time.sleep(3)  # Attendre le chargement de la journée précédente
+                    previous_button[0].click()
+                    time.sleep(3)
                 else:
                     print("Aucun bouton 'Précédent' disponible. Fin de l'extraction pour cette saison.")
                     break
-            except Exception as e:
+            except Exception:
                 break
 
     def process_season(info_season):
@@ -456,57 +428,27 @@ def scrape_and_store_matches():
         # Extraire les matchs pour toutes les journées
         extract_matches_and_teams(id_season)
     
-    def store_matches():
-        try:
-            print(f"📌 Nombre de saisons à traiter : {len(info_seasons)}")
+    try:
+        # Pour collecter les matchs et les équipes provenant de la table des saisons
+        for info_season in info_seasons:
+            process_season(info_season)
 
-            for info_season in info_seasons:
-                print(f"🔄 Traitement de la saison : {info_season}")
-                process_season(info_season)
+        # Convertir les listes en DataFrames et supprimer les doublons
+        matches_df = pd.DataFrame(matches).drop_duplicates(subset=['id_match'])
+        teams_df = pd.DataFrame(teams).drop_duplicates(subset=['id_team'])
 
-            # Vérifier si des données ont été collectées
-            if not matches:
-                print("❌ Aucune donnée de match collectée.")
-                return
+        # Insérer les données dans Supabase
+        print("Insertion des équipes...")
+        insert_teams(teams_df, supabase)
 
-            if not teams:
-                print("❌ Aucune donnée d'équipe collectée.")
-                return
+        print("Insertion des matchs...")
+        insert_matchs(matches_df, supabase)
 
-            # Convertir les listes en DataFrames et supprimer les doublons
-            matches_df = pd.DataFrame(matches).drop_duplicates(subset=['id_match'])
-            teams_df = pd.DataFrame(teams).drop_duplicates(subset=['id_team'])
-
-            print(f"📊 Nombre de matchs collectés : {len(matches_df)}")
-            print(f"📊 Nombre d'équipes collectées : {len(teams_df)}")
-
-            if not matches_df.empty:
-                print("📥 Insertion des équipes...")
-                insert_teams(teams_df, supabase)
-
-                print("📥 Insertion des matchs...")
-                insert_matchs(matches_df, supabase)
-            else:
-                print("⚠️ Pas de nouveaux matchs à insérer.")
-
-        finally:
-            driver.quit()
-            conn.close()
-            print("✅ Extraction et stockage des matchs terminés !")
-    
-
-    store_matches()
-
-
+    finally:
+        driver.quit()
 
 # Fonction pour récupérer les informations sur les buts
 def scrape_and_store_goals():
-    conn = connect_to_db()
-    if not conn:
-        return
-    supabase = connect_to_supabase()
-    if not supabase:
-        return
 
     # On effectue la requête pour obtenir les liens url des matchs
     cursor = conn.cursor()
@@ -693,7 +635,6 @@ def scrape_and_store_goals():
         finally:
             # S'assurer que le WebDriver est fermé même en cas d'erreur
             driver.quit()
-            conn.close()
 
         # Combiner toutes les données collectées
         if matchs:
