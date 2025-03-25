@@ -315,6 +315,8 @@ def scrape_and_store_seasons():
         # Fermer le navigateur
         driver.quit()
 
+# Initialisation des fonctions pour scrape_and_store_matches
+    
 def handle_cookies():
     """Gère la bannière des cookies."""
     try:
@@ -426,6 +428,33 @@ def process_season(info_season):
 
 def scrape_and_store_matches():
     try:
+
+        # 🔹 Connexion à la base PostgreSQL et Supabase
+        conn = connect_to_db()
+        if not conn:
+            return
+
+        supabase = connect_to_supabase()
+        if not supabase:
+            return
+
+        cursor = conn.cursor()
+
+        cursor.execute("SELECT id_season, link_url FROM season;")
+        info_seasons = cursor.fetchall()
+
+        cursor.execute("SELECT id_match FROM info_goal;")
+        info_matchs_goal = {row[0] for row in cursor.fetchall()}  # Conversion en set d'entiers
+
+        # On effectue la requête pour obtenir la liste des saisons déjà collecté
+        cursor.execute("SELECT DISTINCT s.id_season FROM season s JOIN info_match im ON s.id_season = im.id_season WHERE s.season_name NOT LIKE '%24/25%' AND s.season_name NOT LIKE '%2024/25%';")
+        not_current_season_and_already_stored = {row[0] for row in cursor.fetchall()}  # Conversion en set d'entiers
+        
+        # Initialiser le WebDriver
+        driver = init_webdriver()
+
+        matches, teams = [], [] # Création des cellules vides
+
         # Pour collecter les matchs et les équipes provenant de la table des saisons
         for info_season in info_seasons:
             process_season(info_season)
