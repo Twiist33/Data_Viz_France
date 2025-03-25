@@ -181,17 +181,10 @@ def insert_goals(goals, supabase):
 # Fonction pour initialiser le WebDriver avec les options souhaitées
 def init_webdriver():
     chrome_options = Options()
-    chrome_options.add_argument("--headless")  # Mode headless
-    chrome_options.add_argument("--disable-gpu")
-    chrome_options.add_argument("--no-sandbox")
-    chrome_options.add_argument("--disable-dev-shm-usage")
-    
-    # Paramètres pour bloquer les images et ne charger que le JavaScript essentiel
-    prefs = {
-        "profile.managed_default_content_settings.images": 2,  # Bloque les images
-        "profile.managed_default_content_settings.javascript": 1,  # Active uniquement le JS essentiel
-    }
-    chrome_options.add_experimental_option("prefs", prefs)
+    chrome_options.add_argument("--headless")  # Exécuter sans interface graphique
+    chrome_options.add_argument("--no-sandbox")  # Évite certains problèmes de permissions (utile sur les serveurs)
+    chrome_options.add_argument("--disable-dev-shm-usage")  # Évite des erreurs liées à /dev/shm sur les environnements limités
+
     return webdriver.Chrome(options=chrome_options)
 
 
