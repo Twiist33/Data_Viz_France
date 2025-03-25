@@ -347,7 +347,7 @@ def scrape_and_store_matches():
     not_current_season_and_already_stored = {row[0] for row in cursor.fetchall()}  # Conversion en set d'entiers
     
     # Initialiser le WebDriver
-    driver = webdriver.Chrome()
+    driver = init_webdriver()
 
     matches, teams = [], [] # Création des cellules vides
     
@@ -374,6 +374,8 @@ def scrape_and_store_matches():
 
                 # Vérifier si c'est la première journée (Tour 1)
                 tour_info = soup.find('span', class_='Text rJhVM')
+                print(tour_info.text.strip())
+
                 if tour_info and tour_info.text.strip() == "Tour 1":
                     break
 
