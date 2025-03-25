@@ -323,7 +323,7 @@ def scrape_and_store_seasons():
         conn.close()
 
 # Fonction pour récupérer les informations sur les matchs
-def scrape_matches():
+def scrape_and_store_matches():
     conn = connect_to_db()
     if not conn:
         return
@@ -456,7 +456,7 @@ def scrape_matches():
         # Extraire les matchs pour toutes les journées
         extract_matches_and_teams(id_season)
     
-    def scrape_and_store_matches():
+    def store_matches():
         try:
             # Pour collecter les matchs et les équipes provenant de la table des saisons
             for info_season in info_seasons:
@@ -477,6 +477,8 @@ def scrape_matches():
             driver.quit()
             conn.close()
             print("✅ Extraction et stockage des matchs terminés !")
+    
+    store_matches()
 
 
 
