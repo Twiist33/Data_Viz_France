@@ -184,7 +184,7 @@ def init_webdriver():
     chrome_options.add_argument("--headless")  # Exécuter sans interface graphique
     chrome_options.add_argument("--no-sandbox")  # Évite certains problèmes de permissions (utile sur les serveurs)
     chrome_options.add_argument("--disable-dev-shm-usage")  # Évite des erreurs liées à /dev/shm sur les environnements limités
-
+    chrome_options.add_argument("--disable-gpu")
     return webdriver.Chrome(options=chrome_options)
 
 
@@ -362,11 +362,8 @@ def scrape_and_store_matches():
                 target_div = WebDriverWait(driver, 10).until(
                     EC.presence_of_element_located((By.CLASS_NAME, "TabPanel.bpHovE"))
                 )
-                print(target_div)
                 html_content = driver.page_source
-                print(html_content)
                 soup = BeautifulSoup(html_content, 'html.parser')
-                print(soup)
                 # Vérifier si c'est la première journée (Tour 1)
                 tour_info = soup.find('span', class_='Text rJhVM')
                 print(tour_info.text.strip())
