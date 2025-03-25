@@ -359,13 +359,12 @@ def scrape_and_store_matches():
         while True:
             try:
                 # Attendre le chargement des matchs de la journée courante
-                target_div = WebDriverWait(driver, 10).until(
+                target_div = WebDriverWait(driver, 20).until(
                     EC.presence_of_element_located((By.CLASS_NAME, "TabPanel.bpHovE"))
                 )
                 html_content = driver.page_source
                 soup = BeautifulSoup(html_content, 'html.parser')
                 
-                print(soup.prettify())
                 # Vérifier si c'est la première journée (Tour 1)
                 tour_info = soup.find('span', class_='Text rJhVM')
                 if tour_info:
