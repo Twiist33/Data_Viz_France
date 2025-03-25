@@ -458,26 +458,43 @@ def scrape_and_store_matches():
     
     def store_matches():
         try:
-            # Pour collecter les matchs et les équipes provenant de la table des saisons
+            print(f"📌 Nombre de saisons à traiter : {len(info_seasons)}")
+
             for info_season in info_seasons:
+                print(f"🔄 Traitement de la saison : {info_season}")
                 process_season(info_season)
+
+            # Vérifier si des données ont été collectées
+            if not matches:
+                print("❌ Aucune donnée de match collectée.")
+                return
+
+            if not teams:
+                print("❌ Aucune donnée d'équipe collectée.")
+                return
 
             # Convertir les listes en DataFrames et supprimer les doublons
             matches_df = pd.DataFrame(matches).drop_duplicates(subset=['id_match'])
             teams_df = pd.DataFrame(teams).drop_duplicates(subset=['id_team'])
 
-            # Insérer les données dans Supabase
-            print("Insertion des équipes...")
-            insert_teams(teams_df, supabase)
+            print(f"📊 Nombre de matchs collectés : {len(matches_df)}")
+            print(f"📊 Nombre d'équipes collectées : {len(teams_df)}")
 
-            print("Insertion des matchs...")
-            insert_matchs(matches_df, supabase)
+            if not matches_df.empty:
+                print("📥 Insertion des équipes...")
+                insert_teams(teams_df, supabase)
+
+                print("📥 Insertion des matchs...")
+                insert_matchs(matches_df, supabase)
+            else:
+                print("⚠️ Pas de nouveaux matchs à insérer.")
 
         finally:
             driver.quit()
             conn.close()
             print("✅ Extraction et stockage des matchs terminés !")
     
+
     store_matches()
 
 
