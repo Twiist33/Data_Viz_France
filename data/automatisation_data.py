@@ -340,7 +340,7 @@ def init_function_matches():
 
     return info_seasons, info_matchs_goal, not_current_season_and_already_stored
 
-def handle_cookies():
+def handle_cookies(driver):
     """Gère la bannière des cookies."""
     try:
         cookies_button = WebDriverWait(driver, 5).until(
@@ -350,12 +350,10 @@ def handle_cookies():
     except Exception:
         print("Aucune bannière de cookies détectée.")
 
-def extract_matches_and_teams(id_season, info_matchs_goal):
+def extract_matches_and_teams(driver, id_season, info_matchs_goal):
     """Extrait les matchs, les équipes et les dates pour toutes les journées disponibles."""
     while True:
         try:
-            _, info_matchs_goal, _ = init_function_matches()
-
             # Attendre le chargement des matchs de la journée courante
             target_div = WebDriverWait(driver, 10).until(
                 EC.presence_of_element_located((By.CLASS_NAME, "TabPanel.bpHovE"))
@@ -433,7 +431,7 @@ def extract_matches_and_teams(id_season, info_matchs_goal):
         except Exception as e:
             break
 
-def process_season(info_season, info_matchs_goal, not_current_season_and_already_stored):
+def process_season(driver, info_season, info_matchs_goal, not_current_season_and_already_stored):
     """Traite les données d'une saison complète."""
 
     id_season, url_season_french = info_season
@@ -447,10 +445,10 @@ def process_season(info_season, info_matchs_goal, not_current_season_and_already
     print(f"Navigué à : {url_season_french}")
 
     time.sleep(5)  # Attendre le chargement initial de la page
-    handle_cookies()
+    handle_cookies(driver)
 
     # Extraire les matchs pour toutes les journées
-    extract_matches_and_teams(id_season, info_matchs_goal)
+    extract_matches_and_teams(driver, id_season, info_matchs_goal)
 
 def scrape_and_store_matches():
     try:
@@ -462,7 +460,7 @@ def scrape_and_store_matches():
 
         # Pour collecter les matchs et les équipes provenant de la table des saisons
         for info_season in info_seasons:
-            process_season(info_season, info_matchs_goal, not_current_season_and_already_stored)
+            process_season(driver, info_season, info_matchs_goal, not_current_season_and_already_stored)
 
         # Convertir les listes en DataFrames et supprimer les doublons
         matches_df = pd.DataFrame(matches).drop_duplicates(subset=['id_match'])
