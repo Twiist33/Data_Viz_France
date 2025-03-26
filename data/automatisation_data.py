@@ -185,6 +185,7 @@ def init_webdriver():
     chrome_options.add_argument("--no-sandbox")  # Évite certains problèmes de permissions (utile sur les serveurs)
     chrome_options.add_argument("--disable-dev-shm-usage")  # Évite des erreurs liées à /dev/shm sur les environnements limités
     chrome_options.add_argument("--disable-gpu")
+    chrome_options.add_argument("user-agent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36")
     return webdriver.Chrome(options=chrome_options)
 
 
@@ -357,14 +358,12 @@ def extract_matches_and_teams(driver, id_season, info_matchs_goal):
             matches, teams = [], [] # Création des cellules vides
 
             # Attendre le chargement des matchs de la journée courante
-            target_div = WebDriverWait(driver, 15).until(
+            target_div = WebDriverWait(driver, 30).until(
                 EC.presence_of_element_located((By.CLASS_NAME, "TabPanel.bpHovE"))
             )
             html_content = driver.page_source
             soup = BeautifulSoup(html_content, 'html.parser')
-            
-            print(f"🔍 Page source actuelle : {driver.page_source[:1000]}")  # Afficher les premiers caractères
-            # Vérifier si c'est la première journée (Tour 1)
+                        # Vérifier si c'est la première journée (Tour 1)
             tour_info = soup.find('span', class_='Text rJhVM')
             print(f"🔍 Élément trouvé : {tour_info}")
             print(tour_info.text.strip())
@@ -428,7 +427,7 @@ def extract_matches_and_teams(driver, id_season, info_matchs_goal):
             if previous_button:
                 print("🔄 On clique sur 'Précédent'")
                 previous_button.click()
-                time.sleep(15)  # Attendre le chargement de la journée précédente
+                time.sleep(30)  # Attendre le chargement de la journée précédente
             else:
                 print("Aucun bouton 'Précédent' disponible. Fin de l'extraction pour cette saison.")
                 break
