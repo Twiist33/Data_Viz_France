@@ -439,12 +439,12 @@ def extract_matches_and_teams(driver, id_season, info_matchs_goal):
 def process_season(info_season, info_matchs_goal, not_current_season_and_already_stored):
     """Traite les données d'une saison complète."""
 
-    id_season, url_season_french = info_season
+    id_season, url_season_french = info_season # Initialisation des données
 
     # Vérifier si la saison est déjà enregistrée et terminée
     if id_season in not_current_season_and_already_stored:
         print(f"Compétition déjà enregistrée et terminée : {url_season_french}")
-        return [], []
+        return [], [], []
     
     driver = init_webdriver()  # Initialiser le WebDriver
 
@@ -458,7 +458,7 @@ def process_season(info_season, info_matchs_goal, not_current_season_and_already
     matches, teams = extract_matches_and_teams(driver, id_season, info_matchs_goal)
 
     if matches is None or teams is None:
-        return [], []  # Protéger contre une valeur None venant de extract_matches_and_teams
+        return [], [], []  # Protéger contre une valeur None venant de extract_matches_and_teams
 
     return driver, matches, teams  # Retourner les listes
 
