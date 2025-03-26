@@ -436,7 +436,7 @@ def extract_matches_and_teams(driver, id_season, info_matchs_goal):
 
     return matches, teams  # Retourne les listes des matchs et des équipes
 
-def process_season(driver, info_season, info_matchs_goal, not_current_season_and_already_stored):
+def process_season(info_season, info_matchs_goal, not_current_season_and_already_stored):
     """Traite les données d'une saison complète."""
 
     id_season, url_season_french = info_season
@@ -444,7 +444,9 @@ def process_season(driver, info_season, info_matchs_goal, not_current_season_and
     # Vérifier si la saison est déjà enregistrée et terminée
     if id_season in not_current_season_and_already_stored:
         print(f"Compétition déjà enregistrée et terminée : {url_season_french}")
-        return  # Passer directement à la saison suivante
+        return [], []
+    
+    driver = init_webdriver()  # Initialiser le WebDriver
 
     driver.get(url_season_french)
     print(f"Navigué à : {url_season_french}")
@@ -454,21 +456,23 @@ def process_season(driver, info_season, info_matchs_goal, not_current_season_and
 
     # Extraire les matchs pour toutes les journées
     matches, teams = extract_matches_and_teams(driver, id_season, info_matchs_goal)
-    
+
+    if matches is None or teams is None:
+        return [], []  # Protéger contre une valeur None venant de extract_matches_and_teams
+
     return matches, teams  # Retourner les listes
 
 def scrape_and_store_matches():
     try:
         conn, supabase, info_seasons, info_matchs_goal, not_current_season_and_already_stored = init_function_matches()
 
-        driver = init_webdriver()  # Initialiser le WebDriver
 
         all_matches = []  # Liste pour stocker tous les matchs
         all_teams = []  # Liste pour stocker toutes les équipes
 
         # Collecter les matchs et les équipes pour chaque saison
         for info_season in info_seasons:
-            matches, teams = process_season(driver, info_season, info_matchs_goal, not_current_season_and_already_stored)
+            matches, teams = process_season(info_season, info_matchs_goal, not_current_season_and_already_stored)
 
             all_matches.extend(matches)  # Ajouter les matchs collectés
             all_teams.extend(teams)  # Ajouter les équipes collectées
@@ -486,7 +490,7 @@ def scrape_and_store_matches():
 
     finally:
         driver.quit()
-        
+
 def init_function_goals():
     # 🔹 Connexion à la base PostgreSQL et Supabase
     conn = connect_to_db()
