@@ -460,19 +460,18 @@ def process_season(info_season, info_matchs_goal, not_current_season_and_already
     if matches is None or teams is None:
         return [], []  # Protéger contre une valeur None venant de extract_matches_and_teams
 
-    return matches, teams  # Retourner les listes
+    return driver, matches, teams  # Retourner les listes
 
 def scrape_and_store_matches():
     try:
         conn, supabase, info_seasons, info_matchs_goal, not_current_season_and_already_stored = init_function_matches()
-
 
         all_matches = []  # Liste pour stocker tous les matchs
         all_teams = []  # Liste pour stocker toutes les équipes
 
         # Collecter les matchs et les équipes pour chaque saison
         for info_season in info_seasons:
-            matches, teams = process_season(info_season, info_matchs_goal, not_current_season_and_already_stored)
+            driver, matches, teams = process_season(info_season, info_matchs_goal, not_current_season_and_already_stored)
 
             all_matches.extend(matches)  # Ajouter les matchs collectés
             all_teams.extend(teams)  # Ajouter les équipes collectées
