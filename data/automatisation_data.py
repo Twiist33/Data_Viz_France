@@ -362,9 +362,10 @@ def extract_matches_and_teams(driver, id_season, info_matchs_goal):
                 EC.presence_of_element_located((By.CLASS_NAME, "TabPanel.bpHovE"))
             )
             html_content = driver.page_source
-            print(driver.page_source)
             soup = BeautifulSoup(html_content, 'html.parser')
-                        # Vérifier si c'est la première journée (Tour 1)
+            
+            # Vérifier si c'est la première journée (Tour 1)
+            wait = WebDriverWait(driver, 10)
             tour_info = wait.until(EC.presence_of_element_located((By.CLASS_NAME, 'Text.rJhVM')))
             #tour_info = soup.find('span', class_='Text rJhVM')
             if tour_info:
