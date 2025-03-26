@@ -429,6 +429,7 @@ def extract_matches_and_teams(driver, id_season, info_matchs_goal):
                 print("Aucun bouton 'Précédent' disponible. Fin de l'extraction pour cette saison.")
                 break
         except Exception as e:
+            print(f" Erreur : {e}")
             break
 
 def process_season(driver, info_season, info_matchs_goal, not_current_season_and_already_stored):
