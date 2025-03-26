@@ -358,14 +358,19 @@ def extract_matches_and_teams(driver, id_season, info_matchs_goal):
             matches, teams = [], [] # Création des cellules vides
 
             # Attendre le chargement des matchs de la journée courante
-            target_div = WebDriverWait(driver, 30).until(
+            target_div = WebDriverWait(driver, 120).until(
                 EC.presence_of_element_located((By.CLASS_NAME, "TabPanel.bpHovE"))
             )
             html_content = driver.page_source
+            print(driver.page_source)
             soup = BeautifulSoup(html_content, 'html.parser')
                         # Vérifier si c'est la première journée (Tour 1)
-            tour_info = soup.find('span', class_='Text rJhVM')
-            print(f"🔍 Élément trouvé : {tour_info}")
+            tour_info = wait.until(EC.presence_of_element_located((By.CLASS_NAME, 'Text.rJhVM')))
+            #tour_info = soup.find('span', class_='Text rJhVM')
+            if tour_info:
+                print(f"🔍 Élément trouvé : {tour_info.text.strip()}")
+            else:
+                print("❌ L'élément 'tour_info' n'a pas été trouvé.")
             print(tour_info.text.strip())
             if tour_info and tour_info.text.strip() == "Tour 1":
                 break
@@ -427,7 +432,7 @@ def extract_matches_and_teams(driver, id_season, info_matchs_goal):
             if previous_button:
                 print("🔄 On clique sur 'Précédent'")
                 previous_button.click()
-                time.sleep(30)  # Attendre le chargement de la journée précédente
+                time.sleep(120)  # Attendre le chargement de la journée précédente
             else:
                 print("Aucun bouton 'Précédent' disponible. Fin de l'extraction pour cette saison.")
                 break
