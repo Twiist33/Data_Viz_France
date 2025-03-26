@@ -433,7 +433,7 @@ def extract_matches_and_teams(id_season, info_matchs_goal):
         except Exception as e:
             break
 
-def process_season(info_season, info_matchs_goal, not_current_season_and_already_stored)):
+def process_season(info_season, info_matchs_goal, not_current_season_and_already_stored):
     """Traite les données d'une saison complète."""
 
     id_season, url_season_french = info_season
