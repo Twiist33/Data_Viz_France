@@ -450,7 +450,7 @@ def process_season(info_season, info_matchs_goal, not_current_season_and_already
     handle_cookies()
 
     # Extraire les matchs pour toutes les journées
-    extract_matches_and_teams(id_season)
+    extract_matches_and_teams(id_season, info_matchs_goal)
 
 def scrape_and_store_matches():
     try:
@@ -462,7 +462,7 @@ def scrape_and_store_matches():
 
         # Pour collecter les matchs et les équipes provenant de la table des saisons
         for info_season in info_seasons:
-            process_season(info_season)
+            process_season(info_season, info_matchs_goal, not_current_season_and_already_stored))
 
         # Convertir les listes en DataFrames et supprimer les doublons
         matches_df = pd.DataFrame(matches).drop_duplicates(subset=['id_match'])
