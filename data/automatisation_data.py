@@ -20,6 +20,7 @@ from datetime import datetime, date
 from selenium.common.exceptions import TimeoutException, UnexpectedAlertPresentException
 from selenium.webdriver.chrome.options import Options
 from tqdm import tqdm
+
 # Charger le fichier .env
 load_dotenv()
 
@@ -353,27 +354,21 @@ def extract_matches_and_teams(driver, id_season, info_matchs_goal):
     """Extrait les matchs, les équipes et les dates pour toutes les journées disponibles."""
     while True:
         try:
-            matches, teams = [], []  # Création des cellules vides
+            matches, teams = [], [] # Création des cellules vides
 
-            # Vérifier si la page a bien chargé
-            try:
-                WebDriverWait(driver, 15).until(
-                    EC.presence_of_element_located((By.CLASS_NAME, "TabPanel.bpHovE"))
-                )
-            except Exception as e:
-                print(f"⚠️ Erreur WebDriverWait (page non chargée) : {e}")
-                break  # Sort de la boucle si la page ne charge pas
-
-            time.sleep(3)  # Pause supplémentaire
-
-            soup = BeautifulSoup(driver.page_source, 'html.parser')
-
+            # Attendre le chargement des matchs de la journée courante
+            target_div = WebDriverWait(driver, 15).until(
+                EC.presence_of_element_located((By.CLASS_NAME, "TabPanel.bpHovE"))
+            )
+            html_content = driver.page_source
+            soup = BeautifulSoup(html_content, 'html.parser')
+            
+            print(f"🔍 Page source actuelle : {driver.page_source[:1000]}")  # Afficher les premiers caractères
             # Vérifier si c'est la première journée (Tour 1)
             tour_info = soup.find('span', class_='Text rJhVM')
-            if tour_info:
-                print(f"🔍 Tour trouvé : {tour_info.text.strip()}")
+            print(f"🔍 Élément trouvé : {tour_info}")
+            print(tour_info.text.strip())
             if tour_info and tour_info.text.strip() == "Tour 1":
-                print("🚨 Fin de l'extraction : Tour 1 atteint.")
                 break
 
             # Extraction des matchs
@@ -382,39 +377,66 @@ def extract_matches_and_teams(driver, id_season, info_matchs_goal):
                 if not href:
                     continue
 
+                # ID du match
                 id_match = int(link.get('data-id'))
-                if id_match in info_matchs_goal:
-                    continue  # Déjà collecté
 
+                # Vérifier si le match est déjà collecté
+                if id_match in info_matchs_goal:
+                    continue
+
+                # Vérifier si le match n'est pas valide
                 event_status = link.find('bdi', {'class': 'Text fgUtAL'})
                 if event_status and any(status in event_status.text.strip() for status in ["Reporté", "Abandon", "Annulé"]):
                     continue
+                
+                event_status_tv = link.find('bdi', {'class': 'Text kkVniA'})
+                if event_status_tv and any(status in event_status_tv.text.strip() for status in ["Tapis vert"]):
+                    continue
 
+                # Date du match
                 event_time_element = link.find('bdi', {'class': 'Text kcRyBI'})
                 match_date = None
                 if event_time_element:
+                    event_text = event_time_element.text.strip()
                     try:
-                        match_date = datetime.strptime(event_time_element.text.strip().split()[0], "%d/%m/%y").strftime("%Y-%m-%d")
+                        match_date = datetime.strptime(event_text.split()[0], "%d/%m/%y").strftime("%Y-%m-%d")
                     except ValueError:
                         continue
 
-                matches.append({'id_match': id_match, 'id_season': id_season, 'match_date': match_date})
+                # Équipes et ID
+                id_home_team = link.find('div', {'data-testid': 'left_team'}).find('img')['src'].split('/')[-3]
+                id_away_team = link.find('div', {'data-testid': 'right_team'}).find('img')['src'].split('/')[-3]
+                team_home_name = link.find('div', {'data-testid': 'left_team'}).find('bdi').text.strip()
+                team_away_name = link.find('div', {'data-testid': 'right_team'}).find('bdi').text.strip()
 
-            # Vérifier le bouton "Précédent"
-            previous_buttons = driver.find_elements(By.XPATH, "//button[contains(@class, 'Button')]")
-            if previous_buttons:
+                # Ajouter les matchs et les équipes
+                matches.append({
+                    'id_match': id_match,
+                    'id_season': id_season,
+                    'id_home_team': id_home_team,
+                    'id_away_team': id_away_team,
+                    'link_url': href,
+                    'match_date': match_date
+                })
+                teams.append({'id_team': id_home_team, 'team_name': team_home_name})
+                teams.append({'id_team': id_away_team, 'team_name': team_away_name})
+
+            # Vérifier si le bouton "Précédent" est disponible
+            previous_button = driver.find_element(By.XPATH, 
+                "//div[contains(@class, 'Box Flex')]/button[contains(@class, 'Button') and contains(@style, 'visible')][1]"
+            )
+            if previous_button:
                 print("🔄 On clique sur 'Précédent'")
-                previous_buttons[0].click()
-                time.sleep(3)
+                previous_button.click()
+                time.sleep(15)  # Attendre le chargement de la journée précédente
             else:
-                print("✅ Fin de l'extraction (plus de journées).")
+                print("Aucun bouton 'Précédent' disponible. Fin de l'extraction pour cette saison.")
                 break
-
         except Exception as e:
-            print(f"❌ Erreur inattendue : {e}")
+            print(f" Erreur : {e}")
             break
 
-    return matches, teams
+    return matches, teams  # Retourne les listes des matchs et des équipes
 
 def process_season(info_season, info_matchs_goal, not_current_season_and_already_stored):
     """Traite les données d'une saison complète."""
