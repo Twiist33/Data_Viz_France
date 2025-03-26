@@ -350,7 +350,7 @@ def handle_cookies():
     except Exception:
         print("Aucune bannière de cookies détectée.")
 
-def extract_matches_and_teams(id_season):
+def extract_matches_and_teams(id_season, info_matchs_goal):
     """Extrait les matchs, les équipes et les dates pour toutes les journées disponibles."""
     while True:
         try:
@@ -433,10 +433,8 @@ def extract_matches_and_teams(id_season):
         except Exception as e:
             break
 
-def process_season(info_season):
+def process_season(info_season, info_matchs_goal, not_current_season_and_already_stored)):
     """Traite les données d'une saison complète."""
-
-    _, _, not_current_season_and_already_stored = init_function_matches()
 
     id_season, url_season_french = info_season
 
@@ -456,7 +454,7 @@ def process_season(info_season):
 
 def scrape_and_store_matches():
     try:
-        info_seasons, _, _ = init_function_matches()
+        info_seasons, info_matchs_goal, not_current_season_and_already_stored = init_function_matches()
 
         driver = init_webdriver() # Initialiser le WebDriver
 
@@ -498,10 +496,6 @@ def init_function_goals():
 
     info_matchs = cursor.fetchall()
 
-    cursor.execute("SELECT id_match FROM info_goal;")
-    info_matchs_goal = {row[0] for row in cursor.fetchall()}  # Conversion en set d'entiers
-
-    # On effectue la requête pour obtenir les identifiants des matchs dejà dans la base
     cursor.execute("SELECT id_match FROM info_goal;")
     info_matchs_goal = {row[0] for row in cursor.fetchall()}  # Conversion en set d'entiers
 
@@ -635,7 +629,6 @@ def process_match(info_match, driver):
 
 # Fonction principale avec réinitialisation du WebDriver
 def extract_goals(info_matchs, supabase, info_matchs_goal, not_current_season_and_already_stored, reset_interval=10):
-
 
     # Ajouter une étape pour ignorer les matchs des saisons déjà enregistrées et terminées
     filtered_matches = [match for match in info_matchs if match[2] not in not_current_season_and_already_stored]
