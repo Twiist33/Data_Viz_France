@@ -354,6 +354,8 @@ def extract_matches_and_teams(driver, id_season, info_matchs_goal):
     """Extrait les matchs, les équipes et les dates pour toutes les journées disponibles."""
     while True:
         try:
+            matches, teams = [], [] # Création des cellules vides
+
             # Attendre le chargement des matchs de la journée courante
             target_div = WebDriverWait(driver, 10).until(
                 EC.presence_of_element_located((By.CLASS_NAME, "TabPanel.bpHovE"))
@@ -431,7 +433,8 @@ def extract_matches_and_teams(driver, id_season, info_matchs_goal):
         except Exception as e:
             print(f" Erreur : {e}")
             break
-
+    return matches, teams  # Retourne les listes des matchs et des équipes
+    
 def process_season(driver, info_season, info_matchs_goal, not_current_season_and_already_stored):
     """Traite les données d'une saison complète."""
 
@@ -449,15 +452,13 @@ def process_season(driver, info_season, info_matchs_goal, not_current_season_and
     handle_cookies(driver)
 
     # Extraire les matchs pour toutes les journées
-    extract_matches_and_teams(driver, id_season, info_matchs_goal)
+    matches, teams = extract_matches_and_teams(driver, id_season, info_matchs_goal)
 
 def scrape_and_store_matches():
     try:
         conn, supabase, info_seasons, info_matchs_goal, not_current_season_and_already_stored = init_function_matches()
 
         driver = init_webdriver() # Initialiser le WebDriver
-
-        matches, teams = [], [] # Création des cellules vides
 
         # Pour collecter les matchs et les équipes provenant de la table des saisons
         for info_season in info_seasons:
