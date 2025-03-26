@@ -693,6 +693,6 @@ def scrape_and_store_goals():
 
 # Exécuter la fonction
 if __name__ == "__main__":
-    scrape_and_store_seasons()
+    #scrape_and_store_seasons()
     scrape_and_store_matches()
     scrape_and_store_goals()
