@@ -72,18 +72,36 @@ def insert_seasons(seasons,supabase):
     ]
     execution = supabase.table('season').upsert(seasons).execute()
 
+# Création d'une fonction pour insérer des données sur notre projet Supabase
+def insert_seasons(seasons_df, supabase):
+    # Vérification si le DataFrame est vide avant d'essayer de l'insérer
+    if not seasons_df.empty:
+        # Conversion du DataFrame en une liste de dictionnaires pour correspondre au format attendu par Supabase
+        seasons = [Season(**x).dict() for x in seasons_df.to_dict(orient='records')]
+        
+        # Exécution de l'upsert pour insérer ou mettre à jour les données dans la table 'season'
+        execution = supabase.table('season').upsert(seasons).execute()
+    else:
+        print("Le DataFrame des saisons est vide, aucune donnée à insérer.")
+
 # Création d'une classe pour les informations sur les équipes
 class Team(BaseModel):
     id_team: int
     team_name: str
 
 # Création d'une fonction pour insérer des données sur notre projet Supabase
-def insert_teams(teams,supabase):
-    teams = [
-        Team(**x).dict()
-        for x in teams.to_dict(orient='records')
-    ]
-    execution = supabase.table('team').upsert(teams).execute()
+def insert_teams(seasons_df, supabase):
+    # Vérification si le DataFrame est vide avant d'essayer de l'insérer
+    if not teams_df.empty:
+        # Conversion du DataFrame en une liste de dictionnaires pour correspondre au format attendu par Supabase
+        teams = [
+            Team(**x).dict()
+            for x in teams.to_dict(orient='records')
+        ]
+        execution = supabase.table('team').upsert(teams).execute()
+    else:
+        print("Le DataFrame des équipes est vide, aucune donnée à insérer.")
+
 # Création d'une classe pour les matchs
 class Match(BaseModel):
     id_match: int
@@ -94,19 +112,23 @@ class Match(BaseModel):
     link_url: str
 
 # Fonction pour insérer les matches dans la base de données
-def insert_matchs(matchs, supabase):
-    # Convertir les objets 'date' en chaînes au format 'YYYY-MM-DD'
-    matchs = [
-        Match(**x).dict()
-        for x in matchs.to_dict(orient='records')
-    ]
-    
-    for match in matchs:
-        if isinstance(match['match_date'], date):  # Vérifiez si c'est un objet de type date
-            match['match_date'] = match['match_date'].strftime('%Y-%m-%d')  # Convertissez-le en chaîne de caractères
+def insert_matchs(matchs_df, supabase):
+    # Vérification si le DataFrame est vide avant d'essayer de l'insérer
+    if not matchs_df.empty:
+        # Convertir les objets 'date' en chaînes au format 'YYYY-MM-DD'
+        matchs = [
+            Match(**x).dict()
+            for x in matchs.to_dict(orient='records')
+        ]
+        
+        for match in matchs:
+            if isinstance(match['match_date'], date):  # Vérifiez si c'est un objet de type date
+                match['match_date'] = match['match_date'].strftime('%Y-%m-%d')  # Convertissez-le en chaîne de caractères
 
-    # Envoi des données à Supabase
-    execution = supabase.table('info_match').upsert(matchs).execute()
+        # Envoi des données à Supabase
+        execution = supabase.table('info_match').upsert(matchs).execute()
+    else:
+        print("Le DataFrame des matches est vide, aucune donnée à insérer.")
 
 # Définition de la classe Goal
 class Goal(BaseModel):
@@ -129,15 +151,16 @@ class Goal(BaseModel):
     squad_1st_goal : int
 
 # Création d'une fonction pour insérer des données sur notre projet Supabase
-def insert_goals(goals, supabase):
-    """
-    Insère les données des buts dans la base Supabase.
-    """
-    goals = [
-        Goal(**x).model_dump()
-        for x in goals.to_dict(orient='records')
-    ]
-    execution = supabase.table('info_goal').upsert(goals).execute()
+def insert_goals(goals_df, supabase)
+    # Vérification si le DataFrame est vide avant d'essayer de l'insérer
+    if not goals_df.empty:
+        goals = [
+            Goal(**x).model_dump()
+            for x in goals.to_dict(orient='records')
+        ]
+        execution = supabase.table('info_goal').upsert(goals).execute()
+    else:
+        print("Le DataFrame des informations de buts est vide, aucune donnée à insérer.")
 
 def init_webdriver():
     chrome_options = Options()
@@ -234,7 +257,7 @@ def scrape_and_store_seasons():
                     # Vérifier si la saison est présente dans le menu déroulant
                     for option in dropdown_options:
                         if option.text.strip() == season:
-                            print(f"Option trouvée : {season}, clic en cours...")
+                            #print(f"Option trouvée : {season}, clic en cours...")
                             ActionChains(driver).move_to_element(option).click(option).perform()
                             time.sleep(3)  # Attendre que la page se recharge
     
@@ -252,9 +275,11 @@ def scrape_and_store_seasons():
                             competition_name = " ".join(parts[-2].split('-')).title()
                             season_name = f"{competition_name} {season}"
                             #print(f"Extrait : ID Saison = {id_season}, Nom = {season_name}, Lien = {current_url}")                        
+                            
                             if id_season in season_already_records:
                                 #print(f" (ID Saison: {id_season}) déjà enregistrée, passage à la suivante.")
                                 continue 
+
                             # Ajouter l'objet Season
                             season_obj = Season(
                                 id_season=id_season,
