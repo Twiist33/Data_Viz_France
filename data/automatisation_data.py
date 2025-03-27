@@ -358,7 +358,7 @@ def extract_matches_and_teams(driver, id_season, info_matchs_goal):
     """Extrait les matchs, les équipes et les dates pour toutes les journées disponibles."""
     
     matches, teams = [], [] # Création des cellules vides
-    
+
     while True:
         try:
 
@@ -435,7 +435,7 @@ def extract_matches_and_teams(driver, id_season, info_matchs_goal):
             )
             if previous_button:
                 previous_button.click()
-                time.sleep(10)  # Attendre le chargement de la journée précédente
+                time.sleep(3)  # Attendre le chargement de la journée précédente
             else:
                 print("Aucun bouton 'Précédent' disponible. Fin de l'extraction pour cette saison.")
                 break
