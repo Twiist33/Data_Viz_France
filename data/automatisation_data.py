@@ -182,7 +182,6 @@ def insert_goals(goals, supabase):
 # Fonction pour initialiser le WebDriver avec les options souhaitées
 def init_webdriver():
     chrome_options = Options()
-    #chrome_options.add_argument("--headless")  # Exécuter sans interface graphique
     chrome_options.add_argument("--no-sandbox")  # Évite certains problèmes de permissions (utile sur les serveurs)
     chrome_options.add_argument("--disable-dev-shm-usage")  # Évite des erreurs liées à /dev/shm sur les environnements limités
     chrome_options.add_argument("--disable-gpu")
@@ -362,17 +361,12 @@ def extract_matches_and_teams(driver, id_season, info_matchs_goal):
             matches, teams = [], [] # Création des cellules vides
 
             # Attendre le chargement des matchs de la journée courante
-            target_div = WebDriverWait(driver, 20).until(
+            target_div = WebDriverWait(driver, 10).until(
                 EC.presence_of_element_located((By.CLASS_NAME, "TabPanel.bpHovE"))
             )
             html_content = driver.page_source
             soup = BeautifulSoup(html_content, 'html.parser')
 
-            with open("debug_page.html", "w", encoding="utf-8") as f:
-                f.write(html_content)  # Sauvegarde le HTML pour debug
-            
-            all_classes = {tag['class'][0] for tag in soup.find_all(class_=True) if len(tag['class']) == 1}
-            print(f"Classes trouvées : {all_classes}")
             tour_info = soup.find('span', class_='Text rJhVM')
             if tour_info:
                 print(f"🔍 Élément trouvé : {tour_info.text.strip()}")
@@ -439,7 +433,7 @@ def extract_matches_and_teams(driver, id_season, info_matchs_goal):
             if previous_button:
                 print("🔄 On clique sur 'Précédent'")
                 previous_button.click()
-                time.sleep(120)  # Attendre le chargement de la journée précédente
+                time.sleep(3)  # Attendre le chargement de la journée précédente
             else:
                 print("Aucun bouton 'Précédent' disponible. Fin de l'extraction pour cette saison.")
                 break
