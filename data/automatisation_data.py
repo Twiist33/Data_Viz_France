@@ -20,7 +20,6 @@ from datetime import datetime, date
 from selenium.common.exceptions import TimeoutException, UnexpectedAlertPresentException
 from selenium.webdriver.chrome.options import Options
 from tqdm import tqdm
-from lxml import html
 
 # Charger le fichier .env
 load_dotenv()
@@ -357,9 +356,10 @@ def extract_matches_and_teams(driver, id_season, info_matchs_goal):
         try:
 
             # Attendre le chargement des matchs de la journée courante
-            target_div = WebDriverWait(driver, 30).until(
+            target_div = WebDriverWait(driver, 15).until(
                 EC.presence_of_element_located((By.CLASS_NAME, "TabPanel.bpHovE"))
             )
+
             html_content = driver.page_source
             soup = BeautifulSoup(html_content, 'html.parser')
 
@@ -428,7 +428,8 @@ def extract_matches_and_teams(driver, id_season, info_matchs_goal):
             )
             if previous_button:
                 previous_button.click()
-                time.sleep(10)  # Attendre le chargement de la journée précédente
+                # Attendre que l'ancien contenu disparaisse et le nouveau apparaisse
+                WebDriverWait(driver, 15).until(EC.staleness_of(target_div))
             else:
                 print("Aucun bouton 'Précédent' disponible. Fin de l'extraction pour cette saison.")
                 break
