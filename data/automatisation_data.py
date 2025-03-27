@@ -151,7 +151,7 @@ class Goal(BaseModel):
     squad_1st_goal : int
 
 # Création d'une fonction pour insérer des données sur notre projet Supabase
-def insert_goals(goals_df, supabase)
+def insert_goals(goals_df, supabase):
     # Vérification si le DataFrame est vide avant d'essayer de l'insérer
     if not goals_df.empty:
         goals = [
