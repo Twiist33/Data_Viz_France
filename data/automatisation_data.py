@@ -356,9 +356,11 @@ def handle_cookies(driver):
 
 def extract_matches_and_teams(driver, id_season, info_matchs_goal):
     """Extrait les matchs, les équipes et les dates pour toutes les journées disponibles."""
+    
+    matches, teams = [], [] # Création des cellules vides
+    
     while True:
         try:
-            matches, teams = [], [] # Création des cellules vides
 
             # Attendre le chargement des matchs de la journée courante
             target_div = WebDriverWait(driver, 10).until(
@@ -432,15 +434,15 @@ def extract_matches_and_teams(driver, id_season, info_matchs_goal):
                 "//div[contains(@class, 'Box Flex')]/button[contains(@class, 'Button') and contains(@style, 'visible')][1]"
             )
             if previous_button:
-                print("🔄 On clique sur 'Précédent'")
                 previous_button.click()
-                time.sleep(3)  # Attendre le chargement de la journée précédente
+                time.sleep(10)  # Attendre le chargement de la journée précédente
             else:
                 print("Aucun bouton 'Précédent' disponible. Fin de l'extraction pour cette saison.")
                 break
         except Exception as e:
             print(f" Erreur : {e}")
             break
+    
     print(f"🔄 Nombre total de matchs collectés : {len(matches)}")
     print(f"🔄 Nombre total d'équipes collectées : {len(teams)}")
     return matches, teams  # Retourne les listes des matchs et des équipes
