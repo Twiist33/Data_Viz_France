@@ -89,7 +89,7 @@ class Team(BaseModel):
     team_name: str
 
 # Création d'une fonction pour insérer des données sur notre projet Supabase
-def insert_teams(seasons_df, supabase):
+def insert_teams(team_df, supabase):
     # Vérification si le DataFrame est vide avant d'essayer de l'insérer
     if not teams_df.empty:
         # Conversion du DataFrame en une liste de dictionnaires pour correspondre au format attendu par Supabase
@@ -356,7 +356,7 @@ def extract_matches_and_teams(driver, id_season, info_matchs_goal):
         try:
 
             # Attendre le chargement des matchs de la journée courante
-            target_div = WebDriverWait(driver, 15).until(
+            target_div = WebDriverWait(driver, 20).until(
                 EC.presence_of_element_located((By.CLASS_NAME, "TabPanel.bpHovE"))
             )
 
@@ -428,8 +428,7 @@ def extract_matches_and_teams(driver, id_season, info_matchs_goal):
             )
             if previous_button:
                 previous_button.click()
-                # Attendre que l'ancien contenu disparaisse et le nouveau apparaisse
-                WebDriverWait(driver, 15).until(EC.staleness_of(target_div))
+                time.sleep(30)  # Attendre le chargement de la journée précédente
             else:
                 print("Aucun bouton 'Précédent' disponible. Fin de l'extraction pour cette saison.")
                 break
