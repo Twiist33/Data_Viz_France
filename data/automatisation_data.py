@@ -63,49 +63,27 @@ class Season(BaseModel):
     id_competition: int
     link_url: str
 
+
 # Création d'une fonction pour insérer des données sur notre projet Supabase
-def insert_seasons(seasons_df, supabase):
-    # Vérification si le DataFrame est vide avant d'essayer de l'insérer
-    if not seasons_df.empty:
-        # Conversion du DataFrame en une liste de dictionnaires pour correspondre au format attendu par Supabase
-        seasons = [Season(**x).dict() for x in seasons_df.to_dict(orient='records')]
-        
-        # Exécution de l'upsert pour insérer ou mettre à jour les données dans la table 'season'
-        execution = supabase.table('season').upsert(seasons).execute()
-
-        # Vérification du succès de l'opération
-        if execution.status_code == 200:
-            print("Les saisons ont été insérées avec succès.")
-        else:
-            print(f"Erreur lors de l'insertion des saisons: {execution.error_message}")
-    else:
-        print("Le DataFrame des saisons est vide, aucune donnée à insérer.")
-
+def insert_seasons(seasons,supabase):
+    seasons = [
+        Season(**x).dict()
+        for x in seasons.to_dict(orient='records')
+    ]
+    execution = supabase.table('season').upsert(seasons).execute()
 
 # Création d'une classe pour les informations sur les équipes
 class Team(BaseModel):
     id_team: int
     team_name: str
 
-# Création d'une fonction pour insérer les informations des équipes dans la base de données
-def insert_teams(teams_df, supabase):
-    # Vérification si le DataFrame des équipes est vide
-    if not teams_df.empty:
-        # Conversion du DataFrame en une liste de dictionnaires pour correspondre au format attendu par Supabase
-        teams = [Team(**x).dict() for x in teams_df.to_dict(orient='records')]
-        
-        # Exécution de l'upsert pour insérer ou mettre à jour les données dans la table 'team'
-        execution = supabase.table('team').upsert(teams).execute()
-        
-        # Vérification du succès de l'opération
-        if execution.status_code == 200:
-            print(f"✅ {len(teams)} équipes insérées dans Supabase.")
-        else:
-            print(f"⚠️ Erreur lors de l'insertion des équipes : {execution.error_message}")
-    else:
-        print("Le DataFrame des équipes est vide, aucune donnée à insérer.")
-
-
+# Création d'une fonction pour insérer des données sur notre projet Supabase
+def insert_teams(teams,supabase):
+    teams = [
+        Team(**x).dict()
+        for x in teams.to_dict(orient='records')
+    ]
+    execution = supabase.table('team').upsert(teams).execute()
 # Création d'une classe pour les matchs
 class Match(BaseModel):
     id_match: int
@@ -116,28 +94,19 @@ class Match(BaseModel):
     link_url: str
 
 # Fonction pour insérer les matches dans la base de données
-def insert_matchs(matches_df, supabase):
-    # Vérification si le DataFrame des matches est vide
-    if not matches_df.empty:
-        # Conversion du DataFrame en une liste de dictionnaires pour correspondre au format attendu par Supabase
-        matches = [Match(**x).dict() for x in matches_df.to_dict(orient='records')]
-        
-        # Formatage de la date si elle est du type 'date'
-        for match in matches:
-            if isinstance(match['match_date'], date):
-                match['match_date'] = match['match_date'].strftime('%Y-%m-%d')
-        
-        # Exécution de l'upsert pour insérer ou mettre à jour les données dans la table 'info_match'
-        execution = supabase.table('info_match').upsert(matches).execute()
-        
-        # Vérification du succès de l'opération
-        if execution.status_code == 200:
-            print(f"✅ {len(matches)} matches insérés dans Supabase.")
-        else:
-            print(f"⚠️ Erreur lors de l'insertion des matches : {execution.error_message}")
-    else:
-        print("Le DataFrame des matches est vide, aucune donnée à insérer.")
+def insert_matchs(matchs, supabase):
+    # Convertir les objets 'date' en chaînes au format 'YYYY-MM-DD'
+    matchs = [
+        Match(**x).dict()
+        for x in matchs.to_dict(orient='records')
+    ]
+    
+    for match in matchs:
+        if isinstance(match['match_date'], date):  # Vérifiez si c'est un objet de type date
+            match['match_date'] = match['match_date'].strftime('%Y-%m-%d')  # Convertissez-le en chaîne de caractères
 
+    # Envoi des données à Supabase
+    execution = supabase.table('info_match').upsert(matchs).execute()
 
 # Définition de la classe Goal
 class Goal(BaseModel):
@@ -161,22 +130,14 @@ class Goal(BaseModel):
 
 # Création d'une fonction pour insérer des données sur notre projet Supabase
 def insert_goals(goals, supabase):
-    if not goals.empty:
-        goal_data = [
-            Goal(**x).model_dump()
-            for x in goals.to_dict(orient='records')
-        ]
-        
-        # Exécution de l'upsert
-        execution = supabase.table('info_goal').upsert(goal_data).execute()
-        
-        # Nouvelle vérification du succès
-        if execution.error:  # Vérifie s'il y a une erreur
-            print(f"⚠️ Erreur lors de l'insertion des buts : {execution.error}")
-        else:
-            print(f"✅ {len(goal_data)} buts insérés dans Supabase.")
-    else:
-        print("Le DataFrame des buts est vide, aucune donnée à insérer.")
+    """
+    Insère les données des buts dans la base Supabase.
+    """
+    goals = [
+        Goal(**x).model_dump()
+        for x in goals.to_dict(orient='records')
+    ]
+    execution = supabase.table('info_goal').upsert(goals).execute()
 
 
 # Fonction pour initialiser le WebDriver avec les options souhaitées
@@ -428,14 +389,13 @@ def extract_matches_and_teams(driver, id_season, info_matchs_goal):
                 print(f"📌 Match ajouté: {id_match} - {team_home_name} vs {team_away_name} ({match_date})")
                 teams.append({'id_team': id_home_team, 'team_name': team_home_name})
                 teams.append({'id_team': id_away_team, 'team_name': team_away_name})
-                print(f"✅ Ajout des équipes: {team_home_name} (ID: {id_home_team}), {team_away_name} (ID: {id_away_team})")
             # Vérifier si le bouton "Précédent" est disponible
             previous_button = driver.find_element(By.XPATH, 
                 "//div[contains(@class, 'Box Flex')]/button[contains(@class, 'Button') and contains(@style, 'visible')][1]"
             )
             if previous_button:
                 previous_button.click()
-                time.sleep(3)  # Attendre le chargement de la journée précédente
+                time.sleep(10)  # Attendre le chargement de la journée précédente
             else:
                 print("Aucun bouton 'Précédent' disponible. Fin de l'extraction pour cette saison.")
                 break
