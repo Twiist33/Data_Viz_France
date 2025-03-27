@@ -20,6 +20,7 @@ from datetime import datetime, date
 from selenium.common.exceptions import TimeoutException, UnexpectedAlertPresentException
 from selenium.webdriver.chrome.options import Options
 from tqdm import tqdm
+from lxml import html
 
 # Charger le fichier .env
 load_dotenv()
@@ -358,16 +359,13 @@ def extract_matches_and_teams(driver, id_season, info_matchs_goal):
             matches, teams = [], [] # Création des cellules vides
 
             # Attendre le chargement des matchs de la journée courante
-            target_div = WebDriverWait(driver, 120).until(
+            target_div = WebDriverWait(driver, 20).until(
                 EC.presence_of_element_located((By.CLASS_NAME, "TabPanel.bpHovE"))
             )
             html_content = driver.page_source
             soup = BeautifulSoup(html_content, 'html.parser')
             
-            # Vérifier si c'est la première journée (Tour 1)
-            wait = WebDriverWait(driver, 10)
-            tour_info = wait.until(EC.presence_of_element_located((By.CLASS_NAME, 'Text.rJhVM')))
-            #tour_info = soup.find('span', class_='Text rJhVM')
+            tour_info = soup.find('span', class_='Text rJhVM')
             if tour_info:
                 print(f"🔍 Élément trouvé : {tour_info.text.strip()}")
             else:
