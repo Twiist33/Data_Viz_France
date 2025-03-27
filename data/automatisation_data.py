@@ -89,7 +89,7 @@ class Team(BaseModel):
     team_name: str
 
 # Création d'une fonction pour insérer des données sur notre projet Supabase
-def insert_teams(team_df, supabase):
+def insert_teams(teams_df, supabase):
     # Vérification si le DataFrame est vide avant d'essayer de l'insérer
     if not teams_df.empty:
         # Conversion du DataFrame en une liste de dictionnaires pour correspondre au format attendu par Supabase
@@ -356,7 +356,7 @@ def extract_matches_and_teams(driver, id_season, info_matchs_goal):
         try:
 
             # Attendre le chargement des matchs de la journée courante
-            target_div = WebDriverWait(driver, 20).until(
+            target_div = WebDriverWait(driver, 10).until(
                 EC.presence_of_element_located((By.CLASS_NAME, "TabPanel.bpHovE"))
             )
 
@@ -365,9 +365,9 @@ def extract_matches_and_teams(driver, id_season, info_matchs_goal):
 
             tour_info = soup.find('span', class_='Text rJhVM')
             if tour_info:
-                print(f"🔍 Élément trouvé : {tour_info.text.strip()}")
+                #print(f"🔍 Élément trouvé : {tour_info.text.strip()}")
             else:
-                print("❌ L'élément 'tour_info' n'a pas été trouvé.")
+                #print("❌ L'élément 'tour_info' n'a pas été trouvé.")
 
             if tour_info and tour_info.text.strip() == "Tour 1":
                 break
@@ -419,7 +419,7 @@ def extract_matches_and_teams(driver, id_season, info_matchs_goal):
                     'link_url': href,
                     'match_date': match_date
                 })
-                print(f"📌 Match ajouté: {id_match} - {team_home_name} vs {team_away_name} ({match_date})")
+                #print(f"📌 Match ajouté: {id_match} - {team_home_name} vs {team_away_name} ({match_date})")
                 teams.append({'id_team': id_home_team, 'team_name': team_home_name})
                 teams.append({'id_team': id_away_team, 'team_name': team_away_name})
             # Vérifier si le bouton "Précédent" est disponible
@@ -428,16 +428,16 @@ def extract_matches_and_teams(driver, id_season, info_matchs_goal):
             )
             if previous_button:
                 previous_button.click()
-                time.sleep(30)  # Attendre le chargement de la journée précédente
+                time.sleep(3)  # Attendre le chargement de la journée précédente
             else:
-                print("Aucun bouton 'Précédent' disponible. Fin de l'extraction pour cette saison.")
+                #print("Aucun bouton 'Précédent' disponible. Fin de l'extraction pour cette saison.")
                 break
         except Exception as e:
             print(f" Erreur : {e}")
             break
     
-    print(f"🔄 Nombre total de matchs collectés : {len(matches)}")
-    print(f"🔄 Nombre total d'équipes collectées : {len(teams)}")
+    #print(f"🔄 Nombre total de matchs collectés : {len(matches)}")
+    #print(f"🔄 Nombre total d'équipes collectées : {len(teams)}")
     return matches, teams  # Retourne les listes des matchs et des équipes
 
 def process_season(info_season, info_matchs_goal, not_current_season_and_already_stored):
@@ -480,11 +480,11 @@ def scrape_and_store_matches():
             all_matches.extend(matches)  # Ajouter les matchs collectés
             all_teams.extend(teams)  # Ajouter les équipes collectées
         
-        print("Nombre de lignes all_matches :", len(all_matches))
+        #print("Nombre de lignes all_matches :", len(all_matches))
 
         # Convertir les listes en DataFrames et supprimer les doublons
         matches_df = pd.DataFrame(all_matches).drop_duplicates(subset=['id_match'])
-        print("Nombre de lignes matches_df:", len(matches_df))
+        #print("Nombre de lignes matches_df:", len(matches_df))
         teams_df = pd.DataFrame(all_teams).drop_duplicates(subset=['id_team'])
 
         # Insérer les données dans Supabase
