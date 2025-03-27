@@ -139,9 +139,17 @@ def insert_goals(goals, supabase):
     ]
     execution = supabase.table('info_goal').upsert(goals).execute()
 
+def init_webdriver():
+    chrome_options = Options()
+    chrome_options.add_argument("--headless")  # Exécuter sans interface graphique
+    chrome_options.add_argument("--no-sandbox")  # Évite certains problèmes de permissions (utile sur les serveurs)
+    chrome_options.add_argument("--disable-dev-shm-usage")  # Évite des erreurs liées à /dev/shm sur les environnements limités
+    chrome_options.add_argument("--disable-gpu")
+
+    return webdriver.Chrome(options=chrome_options)
 
 # Fonction pour initialiser le WebDriver avec les options souhaitées
-def init_webdriver():
+def init_webdriver_2():
     chrome_options = Options()
     chrome_options.add_argument("--no-sandbox")  # Évite certains problèmes de permissions (utile sur les serveurs)
     chrome_options.add_argument("--disable-dev-shm-usage")  # Évite des erreurs liées à /dev/shm sur les environnements limités
@@ -237,15 +245,15 @@ def scrape_and_store_seasons():
     
                             # Récupérer l'URL actuelle
                             current_url = driver.current_url
-                            print(f"URL actuelle récupérée : {current_url}")
+                            #print(f"URL actuelle récupérée : {current_url}")
                             # Extraire les informations de la saison
                             parts = current_url.split('/')
                             id_season = int(parts[-1].split('#id:')[-1])         
                             competition_name = " ".join(parts[-2].split('-')).title()
                             season_name = f"{competition_name} {season}"
-                            print(f"Extrait : ID Saison = {id_season}, Nom = {season_name}, Lien = {current_url}")                        
+                            #print(f"Extrait : ID Saison = {id_season}, Nom = {season_name}, Lien = {current_url}")                        
                             if id_season in season_already_records:
-                                print(f" (ID Saison: {id_season}) déjà enregistrée, passage à la suivante.")
+                                #print(f" (ID Saison: {id_season}) déjà enregistrée, passage à la suivante.")
                                 continue 
                             # Ajouter l'objet Season
                             season_obj = Season(
@@ -417,7 +425,7 @@ def process_season(info_season, info_matchs_goal, not_current_season_and_already
         print(f"Compétition déjà enregistrée et terminée : {url_season_french}")
         return [], [], []
     
-    driver = init_webdriver()  # Initialiser le WebDriver
+    driver = init_webdriver_2()  # Initialiser le WebDriver
 
     driver.get(url_season_french)
     print(f"Navigué à : {url_season_french}")
@@ -587,7 +595,7 @@ def process_match(info_match, driver):
         for i in range(max_retries):
             try:
                 driver.quit()
-                driver = init_webdriver()
+                driver = init_webdriver_2()
                 driver.get(url_match)
                 print(f"Tentative {i+1}/{max_retries} réussie.")
                 break  # Sortir de la boucle si succès
@@ -628,7 +636,7 @@ def extract_goals(info_matchs, supabase, info_matchs_goal, not_current_season_an
         return  # Arrêter l'exécution si aucun match n'est à traiter
 
     matchs = []
-    driver = init_webdriver()    
+    driver = init_webdriver_2()    
 
     try:
         # Utilisation de tqdm pour afficher la progression
@@ -636,7 +644,7 @@ def extract_goals(info_matchs, supabase, info_matchs_goal, not_current_season_an
             # Réinitialiser le WebDriver périodiquement
             if i > 0 and i % reset_interval == 0:
                 driver.quit()
-                driver = init_webdriver()
+                driver = init_webdriver_2()
 
             try:
                 # Traiter un match individuel
