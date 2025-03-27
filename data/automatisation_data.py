@@ -324,7 +324,7 @@ def extract_matches_and_teams(driver, id_season, info_matchs_goal):
         try:
 
             # Attendre le chargement des matchs de la journée courante
-            target_div = WebDriverWait(driver, 10).until(
+            target_div = WebDriverWait(driver, 30).until(
                 EC.presence_of_element_located((By.CLASS_NAME, "TabPanel.bpHovE"))
             )
             html_content = driver.page_source
@@ -335,7 +335,7 @@ def extract_matches_and_teams(driver, id_season, info_matchs_goal):
                 print(f"🔍 Élément trouvé : {tour_info.text.strip()}")
             else:
                 print("❌ L'élément 'tour_info' n'a pas été trouvé.")
-            print(tour_info.text.strip())
+
             if tour_info and tour_info.text.strip() == "Tour 1":
                 break
 
@@ -667,6 +667,6 @@ def scrape_and_store_goals():
 
 # Exécuter la fonction
 if __name__ == "__main__":
-    #scrape_and_store_seasons()
+    scrape_and_store_seasons()
     scrape_and_store_matches()
     scrape_and_store_goals()
