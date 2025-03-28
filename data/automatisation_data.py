@@ -365,9 +365,9 @@ def extract_matches_and_teams(driver, id_season, info_matchs_goal):
 
             tour_info = soup.find('span', class_='Text rJhVM')
             if tour_info:
-                #print(f"🔍 Élément trouvé : {tour_info.text.strip()}")
+                print(f"🔍 Élément trouvé : {tour_info.text.strip()}")
             else:
-                #print("❌ L'élément 'tour_info' n'a pas été trouvé.")
+                print("❌ L'élément 'tour_info' n'a pas été trouvé.")
 
             if tour_info and tour_info.text.strip() == "Tour 1":
                 break
@@ -430,7 +430,7 @@ def extract_matches_and_teams(driver, id_season, info_matchs_goal):
                 previous_button.click()
                 time.sleep(3)  # Attendre le chargement de la journée précédente
             else:
-                #print("Aucun bouton 'Précédent' disponible. Fin de l'extraction pour cette saison.")
+                print("Aucun bouton 'Précédent' disponible. Fin de l'extraction pour cette saison.")
                 break
         except Exception as e:
             print(f" Erreur : {e}")
@@ -480,11 +480,11 @@ def scrape_and_store_matches():
             all_matches.extend(matches)  # Ajouter les matchs collectés
             all_teams.extend(teams)  # Ajouter les équipes collectées
         
-        #print("Nombre de lignes all_matches :", len(all_matches))
+        print("Nombre de lignes all_matches :", len(all_matches))
 
         # Convertir les listes en DataFrames et supprimer les doublons
         matches_df = pd.DataFrame(all_matches).drop_duplicates(subset=['id_match'])
-        #print("Nombre de lignes matches_df:", len(matches_df))
+        print("Nombre de lignes matches_df:", len(matches_df))
         teams_df = pd.DataFrame(all_teams).drop_duplicates(subset=['id_team'])
 
         # Insérer les données dans Supabase
