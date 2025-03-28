@@ -64,14 +64,6 @@ class Season(BaseModel):
 
 
 # Création d'une fonction pour insérer des données sur notre projet Supabase
-def insert_seasons(seasons,supabase):
-    seasons = [
-        Season(**x).dict()
-        for x in seasons.to_dict(orient='records')
-    ]
-    execution = supabase.table('season').upsert(seasons).execute()
-
-# Création d'une fonction pour insérer des données sur notre projet Supabase
 def insert_seasons(seasons_df, supabase):
     # Vérification si le DataFrame est vide avant d'essayer de l'insérer
     if not seasons_df.empty:
@@ -95,7 +87,7 @@ def insert_teams(teams_df, supabase):
         # Conversion du DataFrame en une liste de dictionnaires pour correspondre au format attendu par Supabase
         teams = [
             Team(**x).dict()
-            for x in teams.to_dict(orient='records')
+            for x in teams_df.to_dict(orient='records')
         ]
         execution = supabase.table('team').upsert(teams).execute()
     else:
@@ -117,7 +109,7 @@ def insert_matchs(matchs_df, supabase):
         # Convertir les objets 'date' en chaînes au format 'YYYY-MM-DD'
         matchs = [
             Match(**x).dict()
-            for x in matchs.to_dict(orient='records')
+            for x in matchs_df.to_dict(orient='records')
         ]
         
         for match in matchs:
@@ -155,7 +147,7 @@ def insert_goals(goals_df, supabase):
     if not goals_df.empty:
         goals = [
             Goal(**x).model_dump()
-            for x in goals.to_dict(orient='records')
+            for x in goals_df.to_dict(orient='records')
         ]
         execution = supabase.table('info_goal').upsert(goals).execute()
     else:
