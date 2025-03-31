@@ -8,6 +8,7 @@ import seaborn as sns
 from supabase import create_client
 from dotenv import load_dotenv
 from decimal import Decimal
+import numpy as np
 
 st.set_page_config(page_title="Data Viz ⚽ 🇫🇷", page_icon="📊", layout="wide") # Configuration de la page Streamlit
 
@@ -466,53 +467,52 @@ if teams_available:
                         
                         # On filtre les données selon l'équipe souhaité, et on se sépare ensuite des colonnes Saison et Équipe
                         first_goal_team = first_goal_df[first_goal_df["Équipe"] == selected_team].iloc[:, 2:]
+
+                        graphs_to_plot = [
+                            (first_goal_team.iloc[0, :3], ["1er but inscrit", "Aucun but", "1er but encaissé"], f"Proportion du 1er but pour {selected_team} durant la {selected_season}"),
+                            (first_goal_team.iloc[0, 3:6], ["1er but inscrit", "Aucun but", "1er but encaissé"], "1er but à domicile"),
+                            (first_goal_team.iloc[0, 6:9], ["1er but inscrit", "Aucun but", "1er but encaissé"], "1er but à l'extérieur"),
+                            (first_goal_team.iloc[0, 9:12], ["Victoire", "Nul", "Défaite"], "Proportion des résultats après 1er but inscrit"),
+                            (first_goal_team.iloc[0, 12:15], ["Victoire", "Nul", "Défaite"], "Résultats à domicile après 1er but inscrit"),
+                            (first_goal_team.iloc[0, 15:18], ["Victoire", "Nul", "Défaite"], "Résultats à l'extérieur après 1er but inscrit"),
+                            (first_goal_team.iloc[0, 18:21], ["Victoire", "Nul", "Défaite"], "Proportion des résultats après 1er but encaissé"),
+                            (first_goal_team.iloc[0, 21:24], ["Victoire", "Nul", "Défaite"], "Résultats à domicile après 1er but encaissé"),
+                            (first_goal_team.iloc[0, 24:27], ["Victoire", "Nul", "Défaite"], "Résultats à l'extérieur après 1er but encaissé")
+                        ]
                         
-                        fig, axes = plt.subplots(3, 3, figsize=(18, 12)) # Création de la figure avec 3 lignes et 3 colonnes
+                        graphs_to_plot = [graph for graph in graphs_to_plot if graph[0].sum() > 0]
+                        
+                        num_graphs = len(graphs_to_plot)
+                        num_rows = -(-num_graphs // 3)  # Équivalent à math.ceil(num_graphs / 3)
+                        
+                        if num_rows == 0:
+                            st.write("Aucune donnée disponible pour afficher les graphiques.")
+                        else:
+                            fig, axes = plt.subplots(num_rows, 3, figsize=(18, 4 * num_rows))
+                            axes = np.atleast_2d(axes)  # Assurer une structure 2D
 
-                        # Proportion du 1er but
-                        axes[0, 0].pie(
-                            first_goal_team.iloc[0, :3], labels=["1er but inscrit", "Aucun but", "1er but encaissé"],
-                            autopct='%1.2f%%', startangle=90, colors=["#2ecc71", "#95a5a6", "#e74c3c"]
-                        )
-                        axes[0, 0].set_title(f"Proportion du 1er but pour {selected_team} durant la {selected_season}")
+                            def plot_pie_chart(ax, data, labels, title,colors):
+                                mask = data > 0  # Filtrer les catégories avec une valeur > 0
+                                filtered_data = data[mask]
+                                filtered_labels = [label for label, m in zip(labels, mask) if m]
+                                filtered_colors = [color for color, m in zip(colors, mask) if m]  # Conserver la correspondance couleur
 
-                        # Résultats à domicile
-                        axes[0, 1].pie(
-                            first_goal_team.iloc[0, 3:6], labels=["Domicile / 1er but inscrit", "Domicile / Aucun but", "Domicile / 1er but encaissé"],
-                            autopct='%1.2f%%', startangle=90, colors=["#2ecc71", "#95a5a6", "#e74c3c"]
-                        )
-                        axes[0, 1].set_title("Résultats à domicile")
-
-                        # Résultats à l'extérieur
-                        axes[0, 2].pie(
-                            first_goal_team.iloc[0, 6:9], labels=["Extérieur / 1er but inscrit", "Extérieur / Aucun but", "Extérieur / 1er but encaissé"],
-                            autopct='%1.2f%%', startangle=90, colors=["#2ecc71", "#95a5a6", "#e74c3c"]
-                        )
-                        axes[0, 2].set_title("Résultats à l'extérieur")
-
-                        # --- 2ème ligne : 1er but inscrit ---
-                        data_labels_inscrit = [
-                            (first_goal_team.iloc[0, 9:12], "Proportion des résultats après 1er but inscrit"),
-                            (first_goal_team.iloc[0, 12:15], "Résultats à domicile après 1er but inscrit"),
-                            (first_goal_team.iloc[0, 15:18], "Résultats à l'extérieur après 1er but inscrit"),
-                        ]
-
-                        for ax, (values, title) in zip(axes[1], data_labels_inscrit):
-                            ax.pie(values, labels=["Victoire", "Match nul", "Défaite"], autopct='%1.2f%%', startangle=90, colors=["#2ecc71", "#95a5a6", "#e74c3c"])
-                            ax.set_title(title)
-
-                        # --- 3ème ligne : 1er but encaissé ---
-                        data_labels_encaissé = [
-                            (first_goal_team.iloc[0, 18:21], "Proportion des résultats après 1er but encaissé"),
-                            (first_goal_team.iloc[0, 21:24], "Résultats à domicile après 1er but encaissé"),
-                            (first_goal_team.iloc[0, 24:27], "Résultats à l'extérieur après 1er but encaissé"),
-                        ]
-
-                        for ax, (values, title) in zip(axes[2], data_labels_encaissé):
-                            ax.pie(values, labels=["Victoire", "Match nul", "Défaite"], autopct='%1.2f%%', startangle=90, colors=["#2ecc71", "#95a5a6", "#e74c3c"])
-                            ax.set_title(title)
-
-                        st.pyplot(fig) # Affichage des graphiques dans Streamlit
+                                if filtered_data.sum() > 0:
+                                    ax.pie(filtered_data, labels=filtered_labels, autopct='%1.2f%%', startangle=90, colors=filtered_colors)
+                                    ax.set_title(title)
+                                else:
+                                    ax.axis('off')
+                            
+                            for idx, (data, labels, title) in enumerate(graphs_to_plot):
+                                row, col = divmod(idx, 3)
+                                plot_pie_chart(axes[row, col], data, labels, title, ["#2ecc71", "#95a5a6", "#e74c3c"])
+                            
+                            for idx in range(num_graphs, num_rows * 3):
+                                row, col = divmod(idx, 3)
+                                axes[row, col].axis("off")
+                            
+                            plt.tight_layout()
+                            st.pyplot(fig)
 
                         # On passe au tableau du 1er but (inscrit ou concédé)
                         first_goal_df_season = first_goal_df.iloc[:, 1:]  # Supprime la colonne Saison
@@ -739,14 +739,17 @@ if teams_available:
                             labels_proportion_home = ["Victoire à domicile", "Match Nul", "Défaite à domicile"]
                             labels_proportion_away = ["Victoire à l'extérieur", "Match Nul", "Défaite à l'extérieur"]
 
-                            col1, col2 = st.columns(2) # Création des colonnes Streamlit à Domicile
+                            def plot_filtered_pie(ax, values, labels, title, colors):
+                                mask = values > 0  # Filtrer les catégories avec une valeur > 0
+                                filtered_values = values[mask]
+                                filtered_labels = [label for label, m in zip(labels, mask) if m]
+                                filtered_colors = [color for color, m in zip(colors, mask) if m]  # Conserver la correspondance couleur
 
-                            # Création du diagramme circulaire
-                            with col1:
-                                fig1, ax1 = plt.subplots(figsize=(7, 7))  
-                                ax1.pie(values_proportion_home, labels=labels_proportion_home, autopct='%1.2f%%', startangle=90, colors=["#2ecc71", "#95a5a6", "#e74c3c"])
-                                ax1.set_title("Proportion des résultats à Domicile")
-                                st.pyplot(fig1)  
+                                if filtered_values.sum() > 0:
+                                    ax.pie(filtered_values, labels=filtered_labels, autopct='%1.2f%%', startangle=90, colors=filtered_colors)
+                                    ax.set_title(title)
+                                else:
+                                    ax.axis('off')
 
                             # Fonction pour la jauge de couleur
                             def get_gauge_color(value, max_value, inverse=False):
@@ -763,6 +766,14 @@ if teams_available:
 
                                 return f"rgb({red},{green},0)"
 
+                            col1, col2 = st.columns(2)  # Création des colonnes Streamlit à Domicile
+
+                            # Création du diagramme circulaire à domicile
+                            with col1:
+                                fig1, ax1 = plt.subplots(figsize=(7, 7))  
+                                plot_filtered_pie(ax1, values_proportion_home, labels_proportion_home, "Proportion des résultats à Domicile", ["#2ecc71", "#95a5a6", "#e74c3c"])
+                                st.pyplot(fig1)  
+
                             # Création de la jauge à domicile
                             with col2:
                                 fig2 = go.Figure(go.Indicator(
@@ -776,13 +787,12 @@ if teams_available:
                                 ))
                                 st.plotly_chart(fig2)
 
-                            col3, col4 = st.columns(2) # Création des colonnes Streamlit à l'Extérieur
+                            col3, col4 = st.columns(2)  # Création des colonnes Streamlit à l'Extérieur
 
-                            # Création du diagramme circulaire
+                            # Création du diagramme circulaire à l'extérieur
                             with col3:
                                 fig3, ax3 = plt.subplots(figsize=(7, 7))  
-                                ax3.pie(values_proportion_away, labels=labels_proportion_away, autopct='%1.2f%%', startangle=90, colors=["#2ecc71", "#95a5a6", "#e74c3c"])
-                                ax3.set_title("Proportion des résultats à l'Extérieur")
+                                plot_filtered_pie(ax3, values_proportion_away, labels_proportion_away, "Proportion des résultats à l'Extérieur", ["#2ecc71", "#95a5a6", "#e74c3c"])
                                 st.pyplot(fig3)  
 
                             # Création de la jauge à l'extérieur

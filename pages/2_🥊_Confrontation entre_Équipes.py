@@ -327,13 +327,13 @@ if teams_available:
                                     (df_home.iloc[0, :3], ["1er but inscrit", "Aucun but", "1er but encaissé"], f"1er but - {selected_team_home}"),
                                     (df_home.iloc[0, 9:12], ["Victoire", "Nul", "Défaite"], f"Résultats après 1er but inscrit - {selected_team_home}"),
                                     (df_home.iloc[0, 18:21], ["Victoire", "Nul", "Défaite"], f"Résultats après 1er but encaissé - {selected_team_home}"),
-                                    (df_home.iloc[0, 3:6], ["Domicile / 1er but inscrit", "Domicile / Aucun but", "Domicile / 1er but encaissé"], f"Résultats à domicile - {selected_team_home}"),
+                                    (df_home.iloc[0, 3:6], ["1er but inscrit", "Aucun but", "1er but encaissé"], f"Résultats à domicile - {selected_team_home}"),
                                     (df_home.iloc[0, 12:15], ["Domicile / Victoire", "Domicile / Nul", "Domicile / Défaite"], f"Domicile après 1er but inscrit - {selected_team_home}"),
                                     (df_home.iloc[0, 21:24], ["Victoire", "Nul", "Défaite"], f"Domicile après 1er but encaissé - {selected_team_home}"),
                                     (df_away.iloc[0, :3], ["1er but inscrit", "Aucun but", "1er but encaissé"], f"1er but - {selected_team_away}"),
                                     (df_away.iloc[0, 9:12], ["Victoire", "Nul", "Défaite"], f"Résultats après 1er but inscrit - {selected_team_away}"),
                                     (df_away.iloc[0, 18:21], ["Victoire", "Nul", "Défaite"], f"Résultats après 1er but encaissé - {selected_team_away}"),
-                                    (df_away.iloc[0, 6:9], ["Extérieur / 1er but inscrit", "Extérieur / Aucun but", "Extérieur / 1er but encaissé"], f"Résultats à l'extérieur - {selected_team_away}"),
+                                    (df_away.iloc[0, 6:9], ["1er but inscrit", "Aucun but", "1er but encaissé"], f"Résultats à l'extérieur - {selected_team_away}"),
                                     (df_away.iloc[0, 15:18], ["Extérieur / Victoire", "Extérieur / Nul", "Extérieur / Défaite"], f"Extérieur après 1er but inscrit - {selected_team_away}"),
                                     (df_away.iloc[0, 24:], ["Victoire", "Nul", "Défaite"], f"Extérieur après 1er but encaissé - {selected_team_away}")
                                 ]
@@ -352,18 +352,21 @@ if teams_available:
                                     fig, axes = plt.subplots(num_rows, 3, figsize=(18, 4 * num_rows))
                                     axes = np.atleast_2d(axes)  # Garantir une structure 2D même si num_rows == 1
 
-                                    # Fonction de tracé des graphiques
-                                    def plot_pie_chart(ax, data, labels, title):
-                                        if data.sum() > 0:
-                                            ax.pie(data, labels=labels, autopct='%1.2f%%', startangle=90, colors=["#2ecc71", "#95a5a6", "#e74c3c"])
+                                    def plot_pie_chart(ax, data, labels, title, colors):
+                                        mask = data > 0  # Filtrer les catégories avec une valeur > 0
+                                        filtered_data = data[mask]
+                                        filtered_labels = [label for label, m in zip(labels, mask) if m]
+                                        filtered_colors = [color for color, m in zip(colors, mask) if m]  # Conserver la correspondance couleur
+
+                                        if filtered_data.sum() > 0:
+                                            ax.pie(filtered_data, labels=filtered_labels, autopct='%1.2f%%', startangle=90, colors=filtered_colors)
                                             ax.set_title(title)
                                         else:
-                                            ax.axis('off')  # Cacher l'axe si aucune donnée
-
+                                            ax.axis('off')
                                     # Remplissage des subplots
                                     for idx, (data, labels, title) in enumerate(graphs_to_plot):
                                         row, col = divmod(idx, 3)  # Convertir index en position (ligne, colonne)
-                                        plot_pie_chart(axes[row, col], data, labels, title)
+                                        plot_pie_chart(axes[row, col], data, labels, title, ["#2ecc71", "#95a5a6", "#e74c3c"])
                                     
                                     # Masquer les axes restants non utilisés
                                     for idx in range(num_graphs, num_rows * 3):
@@ -487,7 +490,6 @@ if teams_available:
                                 plot_distribution_graphs(distrib_goal_home, f"{selected_team_home}")
                                 plot_distribution_graphs(distrib_goal_away, f"{selected_team_away}")
 
-
                         # Affichage des graphiques relatifs à la section Domicile / Extérieur 
                         elif section == "Domicile / Extérieur":
                             result_h_a = get_rank_season(selected_season) # Récupération des statistiques sur l'avantage du terrain
@@ -529,12 +531,18 @@ if teams_available:
 
                                     col1, col2 = st.columns(2) # Création des colonnes Streamlit à Domicile
 
-                                    # Création du diagramme circulaire
-                                    with col1:
-                                        fig1, ax1 = plt.subplots(figsize=(7, 7))  
-                                        ax1.pie(values_proportion_home, labels=labels_proportion_home, autopct='%1.2f%%', startangle=90, colors=["#2ecc71", "#95a5a6", "#e74c3c"])
-                                        ax1.set_title(f"Proportion des résultats à Domicile - {selected_team_home}")
-                                        st.pyplot(fig1)  
+                                    def plot_filtered_pie(ax, values, labels, title, colors):
+                                        mask = values > 0  # Filtrer les catégories avec une valeur > 0
+                                        filtered_values = values[mask]
+                                        filtered_labels = [label for label, m in zip(labels, mask) if m]
+                                        filtered_colors = [color for color, m in zip(colors, mask) if m]  # Conserver la correspondance couleur
+
+                                        if filtered_values.sum() > 0:
+                                            ax.pie(filtered_values, labels=filtered_labels, autopct='%1.2f%%', startangle=90, colors=colors)
+                                            ax.set_title(title)
+                                        else:
+                                            ax.axis('off')
+
 
                                     # Fonction pour la jauge de couleur
                                     def get_gauge_color(value, max_value, inverse=False):
@@ -550,6 +558,12 @@ if teams_available:
                                             green = min(max(int(210 * ratio), 0), 255)  # Limiter à 0-255
 
                                         return f"rgb({red},{green},0)"
+
+                                    # Création du diagramme circulaire
+                                    with col1:
+                                        fig1, ax1 = plt.subplots(figsize=(7, 7))  
+                                        plot_filtered_pie(ax1, values_proportion_home, labels_proportion_home, "Proportion des résultats à Domicile", ["#2ecc71", "#95a5a6", "#e74c3c"])
+                                        st.pyplot(fig1)  
 
                                     # Création de la jauge à domicile
                                     with col2:
@@ -569,8 +583,7 @@ if teams_available:
                                     # Création du diagramme circulaire
                                     with col3:
                                         fig3, ax3 = plt.subplots(figsize=(7, 7))  
-                                        ax3.pie(values_proportion_away, labels=labels_proportion_away, autopct='%1.2f%%', startangle=90, colors=["#2ecc71", "#95a5a6", "#e74c3c"])
-                                        ax3.set_title(f"Proportion des résultats à l'Extérieur - {selected_team_away}")
+                                        plot_filtered_pie(ax3, values_proportion_away, labels_proportion_away, "Proportion des résultats à l'Extérieur", ["#2ecc71", "#95a5a6", "#e74c3c"])
                                         st.pyplot(fig3)  
 
                                     # Création de la jauge à l'extérieur
@@ -736,34 +749,49 @@ if teams_available:
                                     # Séparation des données pour domicile et extérieur
                                     df_home = df_first_goal_confrontation[df_first_goal_confrontation["Équipe"] == selected_team_home].iloc[:, 1:] 
 
-                                    fig, axes = plt.subplots(1, 3, figsize=(15, 7))  # 1 ligne et 3 colonnes
-                                    
-                                    # Graphiques pour l'équipe selected_team_home
-                                    # 1ère ligne : 1er but inscrit
-                                    if df_home.iloc[0, :3].sum() > 0:  # Vérifier que les valeurs ne sont pas toutes nulles
-                                        axes[0].pie(df_home.iloc[0, :3], labels=["1er but inscrit", "Aucun but", "1er but encaissé"],
-                                                    autopct='%1.2f%%', startangle=90, colors=["#2ecc71", "#95a5a6", "#e74c3c"])
-                                        axes[0].set_title(f"{selected_team_home} - 1er but inscrit")
+                                    def plot_filtered_pie(ax, values, labels, title, colors):
+                                        mask = values > 0  # Filtrer les catégories avec une valeur > 0
+                                        filtered_values = values[mask]
+                                        filtered_labels = [label for label, m in zip(labels, mask) if m]
+                                        filtered_colors = [color for color, m in zip(colors, mask) if m]  # Associer les couleurs filtrées
 
-                                    # 2ème ligne : Résultats après 1er but inscrit
-                                    if df_home.iloc[0, 3:6].sum() > 0:  # Vérifier que les valeurs ne sont pas toutes nulles
-                                        axes[1].pie(df_home.iloc[0, 3:6], labels=["Victoire", "Nul", "Défaite"],
-                                                    autopct='%1.2f%%', startangle=90, colors=["#2ecc71", "#f1c40f", "#e74c3c"])
-                                        axes[1].set_title(f"{selected_team_home} - Résultats après 1er but inscrit")
-                                    
-                                    # 3ème ligne : Résultats après 1er but encaissé
-                                    if df_home.iloc[0, 6:].sum() > 0:  # Vérifier que les valeurs ne sont pas toutes nulles
-                                        axes[2].pie(df_home.iloc[0, 6:], labels=["Victoire", "Nul", "Défaite"],
-                                                    autopct='%1.2f%%', startangle=90, colors=["#2ecc71", "#f1c40f", "#e74c3c"])
-                                        axes[2].set_title(f"{selected_team_home} - Résultats après 1er but encaissé")
-                                    else:
-                                        # Si aucune donnée à afficher, masquer la colonne correspondante
-                                        axes[0].axis('off')  # Masque l'axe du graphique
-                                        axes[1].axis('off')  # Masque l'axe du graphique
-                                        axes[2].axis('off')  # Masque l'axe du graphique
+                                        if filtered_values.sum() > 0:
+                                            ax.pie(filtered_values, labels=filtered_labels, autopct='%1.2f%%', startangle=90, colors=filtered_colors)
+                                            ax.set_title(title)
+                                        else:
+                                            ax.axis('off')  # Masquer l'axe si aucune donnée à afficher
+
+                                    fig, axes = plt.subplots(1, 3, figsize=(15, 7))  # 1 ligne et 3 colonnes
+
+                                    # Graphique 1 : 1er but inscrit
+                                    plot_filtered_pie(
+                                        axes[0],
+                                        df_home.iloc[0, :3],
+                                        ["1er but inscrit", "Aucun but", "1er but encaissé"],
+                                        f"{selected_team_home} - 1er but inscrit",
+                                        ["#2ecc71", "#95a5a6", "#e74c3c"]
+                                    )
+
+                                    # Graphique 2 : Résultats après 1er but inscrit
+                                    plot_filtered_pie(
+                                        axes[1],
+                                        df_home.iloc[0, 3:6],
+                                        ["Victoire", "Nul", "Défaite"],
+                                        f"{selected_team_home} - Résultats après 1er but inscrit",
+                                        ["#2ecc71", "#f1c40f", "#e74c3c"]
+                                    )
+
+                                    # Graphique 3 : Résultats après 1er but encaissé
+                                    plot_filtered_pie(
+                                        axes[2],
+                                        df_home.iloc[0, 6:],
+                                        ["Victoire", "Nul", "Défaite"],
+                                        f"{selected_team_home} - Résultats après 1er but encaissé",
+                                        ["#2ecc71", "#f1c40f", "#e74c3c"]
+                                    )
 
                                     plt.tight_layout()  # Ajuste l'affichage pour éviter les chevauchements
-                                    st.pyplot(fig) # On affiche la figure
+                                    st.pyplot(fig)  # Afficher la figure
 
                                 distrib_goal_between_team = get_distrib_goal_between_teams(selected_team_home, selected_team_away) # On récupère nos données
 
@@ -844,47 +872,54 @@ if teams_available:
 
                                         adv_home = float(df_adv_home_away_team["Avantage du Terrain"].values[0]) # Extraction et mise à l'échelle de l'avantage du terrain
 
-                                        # Labels pour les diagrammes
-                                        labels_proportion = ["Victoire", "Match Nul", "Défaite"]
-                                        labels_proportion_home = ["Victoire à domicile", "Match Nul", "Défaite à domicile"]
+                                        def plot_filtered_pie(ax, values, labels, title, colors, text_size=6):
+                                            mask = values > 0  # Filtrer les catégories avec une valeur > 0
+                                            filtered_values = values[mask]
+                                            filtered_labels = [label for label, m in zip(labels, mask) if m]
+                                            filtered_colors = [color for color, m in zip(colors, mask) if m]  # Garder les bonnes couleurs
+
+                                            if filtered_values.sum() > 0:
+                                                wedges, texts, autotexts = ax.pie(
+                                                    filtered_values, labels=filtered_labels, autopct='%1.2f%%', startangle=90, colors=filtered_colors,
+                                                    textprops={'fontsize': text_size}
+                                                )
+                                                for text in texts:
+                                                    text.set_fontsize(text_size)
+                                                for autotext in autotexts:
+                                                    autotext.set_fontsize(text_size)
+
+                                                ax.set_title(title, fontsize=text_size)
+                                            else:
+                                                ax.axis('off')  # Masquer l'axe si aucune donnée n'est disponible
 
                                         # Première ligne : Diagramme circulaire général
                                         with st.container():
                                             col1 = st.columns(1)  
                                             with col1[0]:
                                                 fig1, ax1 = plt.subplots(figsize=(3, 3))
-                                                wedges, texts, autotexts = ax1.pie(
-                                                    values_proportion, 
-                                                    labels=labels_proportion, 
-                                                    autopct='%1.2f%%', 
-                                                    startangle=90, 
-                                                    colors=["#2ecc71", "#95a5a6", "#e74c3c"],
-                                                    textprops={'fontsize': 6}
+                                                plot_filtered_pie(
+                                                    ax1,
+                                                    values_proportion,
+                                                    ["Victoire", "Match Nul", "Défaite"],
+                                                    f"Proportion des résultats de {selected_team_home} contre {selected_team_away} (tous matchs confondus)",
+                                                    ["#2ecc71", "#95a5a6", "#e74c3c"]
                                                 )
-                                                
-                                                # Réduction manuelle de la taille des labels et pourcentages si nécessaire
-                                                for text in texts:
-                                                    text.set_fontsize(6)
-                                                for autotext in autotexts:
-                                                    autotext.set_fontsize(6)
-
-                                                # Titre avec une taille plus petite
-                                                ax1.set_title(
-                                                    f"Proportion des résultats de {selected_team_home} contre {selected_team_away} (tous matchs confondus)", 
-                                                    fontsize=6
-                                                )
-                                                st.pyplot(fig1) # On affiche la figure
+                                                st.pyplot(fig1)
 
                                         # Deuxième ligne : Résultats à domicile + Jauge
-                                        if total_home != 0: # Si le nombre de buts est nulle, on n'affiche pas les graphiques associés
-
+                                        if total_home != 0:  # Vérifier si les statistiques à domicile existent
                                             with st.container():
                                                 col2, col3 = st.columns(2)
 
                                                 with col2:
                                                     fig2, ax2 = plt.subplots(figsize=(7, 7))
-                                                    ax2.pie(values_proportion_home, labels=["Victoire à domicile", "Match Nul", "Défaite à domicile"], autopct='%1.2f%%', startangle=90, colors=["#2ecc71", "#95a5a6", "#e74c3c"])
-                                                    ax2.set_title(f"Proportion des résultats à Domicile de {selected_team_home} contre {selected_team_away}")
+                                                    plot_filtered_pie(
+                                                        ax2,
+                                                        values_proportion_home,
+                                                        ["Victoire à domicile", "Match Nul", "Défaite à domicile"],
+                                                        f"Proportion des résultats à Domicile de {selected_team_home} contre {selected_team_away}",
+                                                        ["#2ecc71", "#95a5a6", "#e74c3c"]
+                                                    )
                                                     st.pyplot(fig2)
 
                                                 def get_gauge_color(value):
@@ -903,6 +938,7 @@ if teams_available:
                                                         gauge={"axis": {"range": [0, 100]}, "bar": {"color": get_gauge_color(adv_home)}}
                                                     ))
                                                     st.plotly_chart(fig3)
+
 
                             else:
                                 st.warning(f"Aucun match opposant {selected_team_home} et {selected_team_away} dans la base de données.")
