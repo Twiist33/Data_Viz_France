@@ -204,6 +204,10 @@ def plot_gauge(value, max_value, title, inverse=False):
 
 st.title("🥊 Confrontation entre Équipes") # Titre de l'application
 
+if "selected_team_away" not in st.session_state or st.session_state.get("selected_team_away") == "SSélectionnez une équipe":
+    st.image("Image/banniere_confrontation.jpg") # Utilisation de la 1er bannière en image
+
+
 st.sidebar.header("🔍 Sélection de l'équipe") # Sélection de la compétition en sidebar
 teams_available = get_teams() # Récupération des équipes disponibles
 

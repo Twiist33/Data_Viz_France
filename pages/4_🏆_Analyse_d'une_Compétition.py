@@ -115,6 +115,10 @@ def highlight_selected_competition(row):
 
 st.title("🏆 Analyse d'une Compétition") # Titre de l'interface Streamlit associé
 
+if "selected_competition" not in st.session_state or st.session_state.get("selected_competition") == "Sélectionnez une compétition":
+    st.image("Image/banniere_competition.jpg") # Utilisation de la 1er bannière en image
+
+
 st.sidebar.header("🔍 Sélection de la compétition") # Utilisation de la sélection de la compétition en sidebar
 competition_available = get_competitions() # Récupération de la liste des compétitions
 
