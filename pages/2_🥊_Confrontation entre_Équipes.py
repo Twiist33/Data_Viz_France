@@ -204,9 +204,10 @@ def plot_gauge(value, max_value, title, inverse=False):
 
 st.title("🥊 Confrontation entre Équipes") # Titre de l'application
 
-if "selected_team_away" not in st.session_state or st.session_state.get("selected_team_away") == "SSélectionnez une équipe":
-    st.image("../Image/banniere_confrontation.jpg") # Utilisation de la 1er bannière en image
+# Vérifie si l'utilisateur a fait un choix (équipe, saison et section)
+show_image = True  # Par défaut, on affiche l'image
 
+image_path = os.path.join(os.path.dirname(__file__), "..", "Image", "banniere_confrontation.jpg") # Construction du chemin absolu
 
 st.sidebar.header("🔍 Sélection de l'équipe") # Sélection de la compétition en sidebar
 teams_available = get_teams() # Récupération des équipes disponibles
@@ -236,7 +237,10 @@ if teams_available:
                     if selected_team_away != "Sélectionnez une équipe":
                         st.sidebar.header("📊 Sélectionnez une analyse")
                         section = st.sidebar.radio("sections", ["Statistiques générales", "1er but inscrit", "Distribution des buts", "Domicile / Extérieur", "Précédentes confrontations"])
-                        
+
+                        # Si une section est sélectionnée, on cache l’image
+                        if section:
+                            show_image = False 
                         st.subheader(f"📌 {section} - {selected_team_home} (Domicile) vs {selected_team_away} (Extérieur) - {selected_season}") # Récapitulatif des choix
                 
                         # Affichage des graphiques relatifs à la section Statistiques Générales            
@@ -902,3 +906,7 @@ if teams_available:
 
                             else:
                                 st.warning(f"Aucun match opposant {selected_team_home} et {selected_team_away} dans la base de données.")
+
+# Affichage de l’image uniquement si aucun choix n'a été fait
+if show_image:
+    st.image(image_path)

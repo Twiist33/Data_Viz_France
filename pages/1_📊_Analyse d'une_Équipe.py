@@ -158,11 +158,15 @@ def highlight_selected_squad(row):
 
 st.title("📊 Analyse d'une Équipe") # Titre de l'application
 
-if "selected_season" not in st.session_state or st.session_state.get("selected_season") == "Sélectionnez une saison":
-    st.image("../Image/banniere_equipe.jpg")  # Utilisation de la bannière en image
+# Vérifie si l'utilisateur a fait un choix (équipe, saison et section)
+show_image = True  # Par défaut, on affiche l'image
+
+# Construction du chemin absolu
+image_path = os.path.join(os.path.dirname(__file__), "..", "Image", "banniere_equipe.jpg")
 
 st.sidebar.header("🔍 Sélection de l'équipe") # Sélection de la compétition en sidebar
 teams_available = get_teams()
+
 
 # Boucle pour selectionner l'équipe de son choix présent dans la base de données
 if teams_available:
@@ -180,9 +184,13 @@ if teams_available:
             if selected_season != "Sélectionnez une saison":
                 st.sidebar.header("📊 Sélectionnez une analyse")
                 section = st.sidebar.radio("Sections", ["Statistiques générales", "1er but inscrit", "Distribution des buts", "Domicile / Extérieur", "Comparaison entre les saisons"])
-                
+
+                # Si une section est sélectionnée, on cache l’image
+                if section:
+                    show_image = False 
+
                 st.subheader(f"📌 {section} - {selected_team} - {selected_season}") # Récapitulatif des choix effectués
-                
+
                 # Affichage des graphiques relatifs à la section Statistiques Générales            
                 if section == "Statistiques générales":
 
@@ -1037,3 +1045,7 @@ if teams_available:
                             )
                             st.subheader(f"⚽ Informations sur les performances à l'extérieur de {selected_team} (toutes saisons)")
                             st.dataframe(style_data_away)
+
+# Affichage de l’image uniquement si aucun choix n'a été fait
+if show_image:
+    st.image(image_path)

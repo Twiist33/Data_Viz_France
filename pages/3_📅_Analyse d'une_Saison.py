@@ -336,8 +336,10 @@ def highlight_selected_season(row):
 
 st.title("📅 Analyse d'une Saison") # Titre de l'application
 
-if "selected_season" not in st.session_state or st.session_state.get("selected_season") == "Sélectionnez une saison":
-    st.image("../Image/banniere_saison.jpg")  # Affichage de la bannière initiale
+# Vérifie si l'utilisateur a fait un choix (équipe, saison et section)
+show_image = True  # Par défaut, on affiche l'image
+
+image_path = os.path.join(os.path.dirname(__file__), "..", "Image", "banniere_saison.jpg") # Construction du chemin absolu
 
 st.sidebar.header("🔍 Sélection de la compétition") # Sélection de la compétition en sidebar
 competitions_available = get_competitions() # Récupèration de la liste des compétitions disponibles
@@ -357,7 +359,11 @@ if competitions_available:
             if selected_season != "Sélectionnez une saison":
                 st.sidebar.header("📊 Sélectionnez une analyse")
                 section = st.sidebar.radio("Sections", ["Statistiques générales", "1er but inscrit", "Distribution des buts", "Domicile / Extérieur", "Comparaison entre les saisons"])
-                
+
+                # Si une section est sélectionnée, on cache l’image
+                if section:
+                    show_image = False 
+
                 st.subheader(f"📌 {section} - {selected_season}") # Récapitulatif des choix effectués
 
                 # Affichage des graphiques relatifs à la section Statistiques Générales            
@@ -1267,3 +1273,7 @@ if competitions_available:
 
                     else:
                         st.warning("Aucune donnée disponible pour cette saison.")
+
+# Affichage de l’image uniquement si aucun choix n'a été fait
+if show_image:
+    st.image(image_path)

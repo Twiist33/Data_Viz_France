@@ -115,8 +115,10 @@ def highlight_selected_competition(row):
 
 st.title("🏆 Analyse d'une Compétition") # Titre de l'interface Streamlit associé
 
-if "selected_competition" not in st.session_state or st.session_state.get("selected_competition") == "Sélectionnez une compétition":
-    st.image("../Image/banniere_competition.jpg")
+# Vérifie si l'utilisateur a fait un choix (équipe, saison et section)
+show_image = True  # Par défaut, on affiche l'image
+
+image_path = os.path.join(os.path.dirname(__file__), "..", "Image", "banniere_competition.jpg") # Construction du chemin absolu
 
 
 st.sidebar.header("🔍 Sélection de la compétition") # Utilisation de la sélection de la compétition en sidebar
@@ -130,7 +132,11 @@ if competition_available:
         st.sidebar.header("📊 Sélectionnez une analyse")
         # Affichage des types de sections disponibles
         section = st.sidebar.radio("Sections", ["Statistiques générales", "1er but inscrit", "Distribution des buts", "Domicile / Extérieur","Comparaison entre les compétitions"])
-        
+
+        # Si une section est sélectionnée, on cache l’image
+        if section:
+            show_image = False
+            
         st.subheader(f"📌 {section} - {selected_competition}") # Récapitulatif des choix effectués
         
         # Affichage des graphiques relatifs à la section Statistiques Générales
@@ -498,3 +504,7 @@ if competition_available:
                 st.dataframe(styled_df)
             else:
                 st.warning("Aucune donnée disponible pour comparaison.")
+
+# Affichage de l’image uniquement si aucun choix n'a été fait
+if show_image:
+    st.image(image_path)
