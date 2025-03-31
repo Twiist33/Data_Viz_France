@@ -337,7 +337,7 @@ def highlight_selected_season(row):
 st.title("📅 Analyse d'une Saison") # Titre de l'application
 
 if "selected_season" not in st.session_state or st.session_state.get("selected_season") == "Sélectionnez une saison":
-    st.image("../Image/banniere_saison.jpg")  # Affichage de la bannière initiale
+    st.image("banniere/banniere_saison.jpg")  # Affichage de la bannière initiale
 
 st.sidebar.header("🔍 Sélection de la compétition") # Sélection de la compétition en sidebar
 competitions_available = get_competitions() # Récupèration de la liste des compétitions disponibles
