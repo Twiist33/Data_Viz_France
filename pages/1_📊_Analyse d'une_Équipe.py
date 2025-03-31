@@ -158,10 +158,8 @@ def highlight_selected_squad(row):
 
 st.title("📊 Analyse d'une Équipe") # Titre de l'application
 
-st.image("banniere/banniere_equipe.jpg")  # Utilisation de la bannière en image
-
-#if "selected_season" not in st.session_state or st.session_state.get("selected_season") == "Sélectionnez une saison":
-    #st.image("banniere/banniere_equipe.jpg")  # Utilisation de la bannière en image
+if "selected_season" not in st.session_state or st.session_state.get("selected_season") == "Sélectionnez une saison":
+    st.image("../Image/banniere_equipe.jpg")  # Utilisation de la bannière en image
 
 st.sidebar.header("🔍 Sélection de l'équipe") # Sélection de la compétition en sidebar
 teams_available = get_teams()
