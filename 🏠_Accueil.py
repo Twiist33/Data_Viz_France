@@ -7,7 +7,6 @@ Ceci est la page principale du projet, veuillez trouver ci dessous une brève pr
 # Import des librairies
 import matplotlib.pyplot as plt
 import streamlit as st
-import matplotlib.image as mpimg
 
 # Charger les  fichiers PDF présent à la fin de la page d'acceuil
 with open("Documentation/Documentation_Data_Viz_France.pdf", "rb") as file:
