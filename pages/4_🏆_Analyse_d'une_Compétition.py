@@ -118,7 +118,7 @@ st.title("🏆 Analyse d'une Compétition") # Titre de l'interface Streamlit ass
 # Vérifie si l'utilisateur a fait un choix (équipe, saison et section)
 show_image = True  # Par défaut, on affiche l'image
 
-image_path = os.path.join(os.path.dirname(__file__), "..", "Image", "banniere_competition.jpg") # Construction du chemin absolu
+image_path = os.path.join(os.path.dirname(__file__), "..", "image", "banniere_competition.jpg") # Construction du chemin absolu
 
 
 st.sidebar.header("🔍 Sélection de la compétition") # Utilisation de la sélection de la compétition en sidebar
@@ -136,7 +136,7 @@ if competition_available:
         # Si une section est sélectionnée, on cache l’image
         if section:
             show_image = False
-            
+
         st.subheader(f"📌 {section} - {selected_competition}") # Récapitulatif des choix effectués
         
         # Affichage des graphiques relatifs à la section Statistiques Générales

@@ -162,7 +162,7 @@ st.title("📊 Analyse d'une Équipe") # Titre de l'application
 show_image = True  # Par défaut, on affiche l'image
 
 # Construction du chemin absolu
-image_path = os.path.join(os.path.dirname(__file__), "..", "Image", "banniere_equipe.jpg")
+image_path = os.path.join(os.path.dirname(__file__), "..", "image", "banniere_equipe.jpg")
 
 st.sidebar.header("🔍 Sélection de l'équipe") # Sélection de la compétition en sidebar
 teams_available = get_teams()

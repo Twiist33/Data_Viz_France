@@ -207,7 +207,7 @@ st.title("🥊 Confrontation entre Équipes") # Titre de l'application
 # Vérifie si l'utilisateur a fait un choix (équipe, saison et section)
 show_image = True  # Par défaut, on affiche l'image
 
-image_path = os.path.join(os.path.dirname(__file__), "..", "Image", "banniere_confrontation.jpg") # Construction du chemin absolu
+image_path = os.path.join(os.path.dirname(__file__), "..", "image", "banniere_confrontation.jpg") # Construction du chemin absolu
 
 st.sidebar.header("🔍 Sélection de l'équipe") # Sélection de la compétition en sidebar
 teams_available = get_teams() # Récupération des équipes disponibles

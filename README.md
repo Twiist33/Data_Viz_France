@@ -20,11 +20,11 @@ Plusieurs fonctionnalités seront disponibles au sein de cette application web :
 
 <br/><br/>
 
-![Image quality](Image/photo_equipe.jpg)
+![Image quality](image/photo_equipe.jpg)
 
-![Image quality](Image/photo_confrontation_equipe.jpg)
+![Image quality](image/photo_confrontation_equipe.jpg)
 
-![Image quality](Image/photo_saison.jpg)
+![Image quality](image/photo_saison.jpg)
 
-![Image quality](Image/photo_competition.jpg)
+![Image quality](image/photo_competition.jpg)
 
