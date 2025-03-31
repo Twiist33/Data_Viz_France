@@ -1,4 +1,4 @@
-![Image quality](Image/logo_1.jpg)
+![Image quality](image/logo_1.jpg)
 
 
 # Projet de data visualisation sur les championnat français
