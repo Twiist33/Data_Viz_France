@@ -27,7 +27,7 @@ st.markdown(
     "<h3 style='text-align: center;'>Projet de data visualisation sur les compétitions françaises de Romain Traboul</h3>", 
     unsafe_allow_html=True)
 
-st.image("image/logo_1.jpg") # Utilisation de la 1er bannière en image
+st.image("Image/logo_1.jpg") # Utilisation de la 1er bannière en image
 
 # Sous-titre
 st.markdown(
