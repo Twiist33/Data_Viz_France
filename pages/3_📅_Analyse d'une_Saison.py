@@ -457,7 +457,7 @@ if competitions_available:
                         ])
                         
                         numeric_columns = df.columns[1:]  # Sélectionne les colonnes numériques
-                        df[numeric_columns] = df[numeric_columns].applymap(lambda x: int(x) if x == int(x) else round(x, 2))
+                        df[numeric_columns] = df[numeric_columns].apply(lambda col: col.apply(lambda x: float(round(x, 2)) if pd.notnull(x) else 0.0))
 
                         df = df.sort_values(by=["Nbr. buts inscrits"], ascending=False) # On ordonne le tableau selon le Nbr. buts inscrits
 
@@ -485,7 +485,8 @@ if competitions_available:
                         ])
                         
                         numeric_columns = df.columns[1:]  # Sélectionne les colonnes numériques
-                        df[numeric_columns] = df[numeric_columns].applymap(lambda x: int(x) if x == int(x) else round(x, 2))
+                        df[numeric_columns] = df[numeric_columns].apply(lambda col: col.apply(lambda x: float(round(x, 2)) if pd.notnull(x) else 0.0))
+
 
                         df = df.sort_values(by=["Nbr. buts concédés"], ascending=False) # On ordonne le tableau selon le Nbr. buts concédés
 
@@ -893,7 +894,8 @@ if competitions_available:
 
                         # On traite les colonnes numériques de façon à les arrondir à 2 chiffres après la virgule si besoin
                         numeric_columns = df.columns[1:]
-                        df[numeric_columns] = df[numeric_columns].applymap(lambda x: int(x) if x == int(x) else round(x, 2))
+                        df[numeric_columns] = df[numeric_columns].apply(lambda col: col.apply(lambda x: float(round(x, 2)) if pd.notnull(x) else 0.0))
+
 
                         df = df.sort_values(by=numeric_columns.tolist(), ascending=False) # Assurer un tri numérique et non alphabétique
 
@@ -925,7 +927,8 @@ if competitions_available:
                             
                             for col in numeric_columns:
                                 df[col] = pd.to_numeric(df[col], errors='coerce')  # Convertir en float
-                            df[numeric_columns] = df[numeric_columns].applymap(lambda x: round(x, 2) if pd.notnull(x) else x) # On arrondit à 2 chiffres après la virgule si besoin
+                            df[numeric_columns] = df[numeric_columns].apply(lambda col: col.apply(lambda x: float(round(x, 2)) if pd.notnull(x) else 0.0))
+ # On arrondit à 2 chiffres après la virgule si besoin
 
                             df = df.sort_values(by=["Saison", "Moy. buts inscrits"], ascending=[False, False]) # On ordonne selon la moyenne de buts inscrits
 
