@@ -9,7 +9,6 @@ from supabase import create_client
 from dotenv import load_dotenv
 from decimal import Decimal
 import numpy as np
-import time
 
 st.set_page_config(page_title="Data Viz ⚽ 🇫🇷", page_icon="📊", layout="wide") # Configuration de la page Streamlit
 
@@ -375,10 +374,10 @@ if teams_available:
                         
                         numeric_columns = df.columns[1:]  # Sélectionne les colonnes numériques
                         # Arrondir et convertir les valeurs numériques
-                        df[numeric_columns] = df[numeric_columns].applymap(
-                            lambda x: int(x) if pd.notnull(x) and x == int(x) else (round(x, 2) if pd.notnull(x) else 0)
-                        )
-                        
+                        df[numeric_columns] = df[numeric_columns].apply(lambda col: col.apply(
+                            lambda x: int(x) if pd.notnull(x) and isinstance(x, (int, float)) and x == int(x) else (round(x, 2) if pd.notnull(x) else 0)
+                        ))
+
                         # Trier par le nombre de buts inscrits
                         df = df.sort_values(by=["Nbr. buts inscrits"], ascending=False)
                         
@@ -410,10 +409,10 @@ if teams_available:
                         numeric_columns = df.columns[1:]  # Sélectionne les colonnes numériques
                         
                         # Arrondir et convertir les valeurs numériques
-                        df[numeric_columns] = df[numeric_columns].applymap(
-                            lambda x: int(x) if pd.notnull(x) and x == int(x) else (round(x, 2) if pd.notnull(x) else 0)
-                        )
-                        
+                        df[numeric_columns] = df[numeric_columns].apply(lambda col: col.apply(
+                            lambda x: int(x) if pd.notnull(x) and isinstance(x, (int, float)) and x == int(x) else (round(x, 2) if pd.notnull(x) else 0)
+                        ))
+  
                         # Trier par le nombre de buts concédés
                         df = df.sort_values(by=["Nbr. buts concédés"], ascending=False)
                         
@@ -884,8 +883,8 @@ if teams_available:
 
                             numeric_columns = df.columns[1:]  # Sélectionne les colonnes numériques
                             # Arrondir et convertir les valeurs numériques
-                            df[numeric_columns] = df[numeric_columns].astype(float).applymap(lambda x: round(x, 2) if pd.notnull(x) else 0)
-                            
+                            df[numeric_columns] = df[numeric_columns].apply(lambda col: col.apply(lambda x: float(round(x, 2)) if pd.notnull(x) else 0.0))
+
                             df = df.sort_values(by=numeric_columns.tolist(), ascending=False) # Trier le tableau
                             
                             # Appliquer le style de formatage et la coloration en une seule fois
