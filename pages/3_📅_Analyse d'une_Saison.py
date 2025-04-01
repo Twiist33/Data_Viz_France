@@ -958,7 +958,7 @@ if competitions_available:
                             for col in numeric_columns:
                                 df[col] = pd.to_numeric(df[col], errors='coerce')  # Convertir en float
 
-                            df[numeric_columns] = df[numeric_columns].applymap(lambda x: round(x, 2) if pd.notnull(x) else x) # Arrondir à deux décimales
+                            df[numeric_columns] = df[numeric_columns].apply(lambda col: col.apply(lambda x: float(round(x, 2)) if pd.notnull(x) else 0.0))
 
                             df = df.sort_values(by=["Saison", "Moy. buts concédés"], ascending=[False, True]) # On ordonne selon la moyenne de buts concédés
                             # Appliquer le style de formatage et la coloration en une seule fois
