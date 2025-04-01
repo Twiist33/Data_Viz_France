@@ -1000,7 +1000,9 @@ if teams_available:
 
                         # Convertir les colonnes numériques en float et arrondir à 2 décimales
                         numeric_columns = [col for col in df_adv_home_away_team.columns if col not in ["Équipe", "Saison", "Type"]]
-                        df_adv_home_away_team[numeric_columns] = df_adv_home_away_team[numeric_columns].astype(float).applymap(lambda x: round(x, 2) if pd.notnull(x) else 0)
+                        df_adv_home_away_team[numeric_columns] = df_adv_home_away_team[numeric_columns].astype(float).apply(
+                            lambda col: col.round(2).fillna(0)
+                        )
 
                         # Récupération des valeurs selon le facteur Domicile/Extérieur avec copie explicite
                         data_home = df_adv_home_away_team[df_adv_home_away_team["Type"] == "Home"].copy()
@@ -1011,10 +1013,10 @@ if teams_available:
                         data_away = data_away.drop(columns=["Équipe", "Type"])
 
                         if not data_home.empty:
-                            # Calcul des pourcentages et arrondi
+                            # Calcul des pourcentages en évitant la division par 0
                             for col in ["Victoire (en %)", "Match Nul (en %)", "Défaite (en %)"]:
-                                data_home[col] = (data_home[col] / data_home["Matches joués"]) * 100
-                                data_home[col] = data_home[col].round(2)  # Arrondi à 2 décimales
+                                data_home[col] = (data_home[col] / data_home["Matches joués"].replace(0, np.nan)) * 100
+                                data_home[col] = data_home[col].round(2).fillna(0)
 
                             data_home = data_home.sort_values(by=["Points"], ascending=False)
                             style_data_home = (
@@ -1027,10 +1029,10 @@ if teams_available:
                             st.dataframe(style_data_home)
 
                         if not data_away.empty:
-                            # Calcul des pourcentages et arrondi
+                            # Calcul des pourcentages en évitant la division par 0
                             for col in ["Victoire (en %)", "Match Nul (en %)", "Défaite (en %)"]:
-                                data_away[col] = (data_away[col] / data_away["Matches joués"]) * 100
-                                data_away[col] = data_away[col].round(2)  # Arrondi à 2 décimales
+                                data_away[col] = (data_away[col] / data_away["Matches joués"].replace(0, np.nan)) * 100
+                                data_away[col] = data_away[col].round(2).fillna(0)
 
                             data_away = data_away.sort_values(by=["Points"], ascending=False)
                             style_data_away = (
@@ -1041,7 +1043,6 @@ if teams_available:
                             )
                             st.subheader(f"⚽ Informations sur les performances à l'extérieur de {selected_team} (toutes saisons)")
                             st.dataframe(style_data_away)
-
 
 # Affichage de l’image uniquement si aucun choix n'a été fait
 if show_image:
