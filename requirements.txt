@@ -11,3 +11,4 @@ pydantic
 selenium
 psycopg2-binary
 tqdm
+Time

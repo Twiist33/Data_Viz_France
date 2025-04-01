@@ -9,6 +9,7 @@ from supabase import create_client
 from dotenv import load_dotenv
 from decimal import Decimal
 import numpy as np
+import time
 
 st.set_page_config(page_title="Data Viz ⚽ 🇫🇷", page_icon="📊", layout="wide") # Configuration de la page Streamlit
 
