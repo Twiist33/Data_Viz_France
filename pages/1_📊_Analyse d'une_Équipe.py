@@ -157,6 +157,19 @@ def highlight_selected_season(row):
 def highlight_selected_squad(row):
     return ['background-color: lightcoral' if row["Équipe"] == selected_team else '' for _ in row]
 
+# Fonction pour construire les camemberts en omettant les labels vides
+def plot_pie_chart(ax, data, labels, title, colors):
+    mask = data > 0  # Filtrer les catégories avec une valeur > 0
+    filtered_data = data[mask]
+    filtered_labels = [label for label, m in zip(labels, mask) if m]
+    filtered_colors = [color for color, m in zip(colors, mask) if m]  # Conserver la correspondance couleur
+
+    if filtered_data.sum() > 0:
+        ax.pie(filtered_data, labels=filtered_labels, autopct='%1.2f%%', startangle=90, colors=filtered_colors)
+        ax.set_title(title)
+    else:
+        ax.axis('off')
+
 st.title("📊 Analyse d'une Équipe") # Titre de l'application
 
 # Vérifie si l'utilisateur a fait un choix (équipe, saison et section)
@@ -490,18 +503,6 @@ if teams_available:
                         else:
                             fig, axes = plt.subplots(num_rows, 3, figsize=(18, 4 * num_rows))
                             axes = np.atleast_2d(axes)  # Assurer une structure 2D
-
-                            def plot_pie_chart(ax, data, labels, title,colors):
-                                mask = data > 0  # Filtrer les catégories avec une valeur > 0
-                                filtered_data = data[mask]
-                                filtered_labels = [label for label, m in zip(labels, mask) if m]
-                                filtered_colors = [color for color, m in zip(colors, mask) if m]  # Conserver la correspondance couleur
-
-                                if filtered_data.sum() > 0:
-                                    ax.pie(filtered_data, labels=filtered_labels, autopct='%1.2f%%', startangle=90, colors=filtered_colors)
-                                    ax.set_title(title)
-                                else:
-                                    ax.axis('off')
                             
                             for idx, (data, labels, title) in enumerate(graphs_to_plot):
                                 row, col = divmod(idx, 3)
@@ -739,18 +740,6 @@ if teams_available:
                             labels_proportion_home = ["Victoire à domicile", "Match Nul", "Défaite à domicile"]
                             labels_proportion_away = ["Victoire à l'extérieur", "Match Nul", "Défaite à l'extérieur"]
 
-                            def plot_filtered_pie(ax, values, labels, title, colors):
-                                mask = values > 0  # Filtrer les catégories avec une valeur > 0
-                                filtered_values = values[mask]
-                                filtered_labels = [label for label, m in zip(labels, mask) if m]
-                                filtered_colors = [color for color, m in zip(colors, mask) if m]  # Conserver la correspondance couleur
-
-                                if filtered_values.sum() > 0:
-                                    ax.pie(filtered_values, labels=filtered_labels, autopct='%1.2f%%', startangle=90, colors=filtered_colors)
-                                    ax.set_title(title)
-                                else:
-                                    ax.axis('off')
-
                             # Fonction pour la jauge de couleur
                             def get_gauge_color(value, max_value, inverse=False):
                                 if max_value <= 0:
@@ -771,7 +760,7 @@ if teams_available:
                             # Création du diagramme circulaire à domicile
                             with col1:
                                 fig1, ax1 = plt.subplots(figsize=(7, 7))  
-                                plot_filtered_pie(ax1, values_proportion_home, labels_proportion_home, "Proportion des résultats à Domicile", ["#2ecc71", "#95a5a6", "#e74c3c"])
+                                plot_pie_chart(ax1, values_proportion_home, labels_proportion_home, "Proportion des résultats à Domicile", ["#2ecc71", "#95a5a6", "#e74c3c"])
                                 st.pyplot(fig1)  
 
                             # Création de la jauge à domicile
@@ -792,7 +781,7 @@ if teams_available:
                             # Création du diagramme circulaire à l'extérieur
                             with col3:
                                 fig3, ax3 = plt.subplots(figsize=(7, 7))  
-                                plot_filtered_pie(ax3, values_proportion_away, labels_proportion_away, "Proportion des résultats à l'Extérieur", ["#2ecc71", "#95a5a6", "#e74c3c"])
+                                plot_pie_chart(ax3, values_proportion_away, labels_proportion_away, "Proportion des résultats à l'Extérieur", ["#2ecc71", "#95a5a6", "#e74c3c"])
                                 st.pyplot(fig3)  
 
                             # Création de la jauge à l'extérieur
