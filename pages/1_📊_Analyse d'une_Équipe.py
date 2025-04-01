@@ -838,7 +838,7 @@ if teams_available:
                             st.dataframe(style_rank_away_data)
 
                 elif section == "Comparaison entre les saisons":
-
+                    time.sleep(3) # Laisser un temps supplémentaire pour charger les données
                     # Initialisation des variables de comparaison
                     compare_goals_season_team_data = []
                     compare_first_goal_team_data = []
