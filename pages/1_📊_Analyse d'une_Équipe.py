@@ -839,211 +839,211 @@ if teams_available:
                             st.dataframe(style_rank_away_data)
 
                 elif section == "Comparaison entre les saisons":
-                    time.sleep(10) # Laisser un temps supplémentaire pour charger les données
-                    # Initialisation des variables de comparaison
-                    compare_goals_season_team_data = []
-                    compare_first_goal_team_data = []
-                    compare_distrib_goal_data = []
-                    compare_home_away_data = []
+                    with st.spinner("Chargement des données..."):
+                        # Initialisation des variables de comparaison
+                        compare_goals_season_team_data = []
+                        compare_first_goal_team_data = []
+                        compare_distrib_goal_data = []
+                        compare_home_away_data = []
 
-                    # Création d'une boucle for pour récupérer la liste des saisons disponibles pour la compétition choisit par l'utilisateur
-                    for season in seasons_available:
-                        # On récupère les données
-                        goals_season_team_stats = get_avg_goals_stats(season)
-                        first_goal_season_stats = get_first_goal_season(season)
-                        distrib_stats = get_distribution_goals_season(season)
-                        home_away_stats = get_rank_season(season)
+                        # Création d'une boucle for pour récupérer la liste des saisons disponibles pour la compétition choisit par l'utilisateur
+                        for season in seasons_available:
+                            # On récupère les données
+                            goals_season_team_stats = get_avg_goals_stats(season)
+                            first_goal_season_stats = get_first_goal_season(season)
+                            distrib_stats = get_distribution_goals_season(season)
+                            home_away_stats = get_rank_season(season)
 
-                        # Si les données ne sont pas vides, on ajoute cela pour chaque saison disponible, en récupérant les informations associées
-                        if goals_season_team_stats:
-                            compare_goals_season_team_data.extend(goals_season_team_stats)
+                            # Si les données ne sont pas vides, on ajoute cela pour chaque saison disponible, en récupérant les informations associées
+                            if goals_season_team_stats:
+                                compare_goals_season_team_data.extend(goals_season_team_stats)
 
-                        if first_goal_season_stats:
-                            compare_first_goal_team_data.extend(first_goal_season_stats)
-                        
-                        if distrib_stats:
-                            compare_distrib_goal_data.extend(distrib_stats)    
-
-                        if home_away_stats:
-                            compare_home_away_data.extend(home_away_stats)            
-
-                    if compare_goals_season_team_data:
-                        # Transformation des données en DataFrame avec les noms de colonnes
-                        df = pd.DataFrame([
-                            {
-                                "Saison": item["season_name"], "Équipe": item["team_name"], "Buts/Match": item["avg_goals_per_match"],
-                                "Buts inscrits/Match": item["avg_team_goals_per_match"], "Buts concédés/Match": item["avg_team_goals_conceded_per_match"],
-                                "Buts inscrits Domicile/Match": item["avg_team_home_goals"], "Buts inscrits Extérieur/Match": item["avg_team_away_goals"],
-                                "Buts concédés Domicile/Match": item["avg_conceded_home_goals"], "Buts concédés Extérieur/Match": item["avg_conceded_away_goals"]
-                            }
-                            for item in compare_goals_season_team_data
-                        ])
-                        df = df[df["Équipe"] == selected_team] # Récupération des valeurs de l'équipe sélectionnée
-
-                        df = df.drop(columns=["Équipe"]) # On enlève la colonne Équipe du tableau que l'on va afficher
-
-                        numeric_columns = df.columns[1:]  # Sélectionne les colonnes numériques
-                        # Arrondir et convertir les valeurs numériques
-                        df[numeric_columns] = df[numeric_columns].astype(float).applymap(lambda x: round(x, 2) if pd.notnull(x) else 0)
-                        
-                        df = df.sort_values(by=numeric_columns.tolist(), ascending=False) # Trier le tableau
-                        
-                        # Appliquer le style de formatage et la coloration en une seule fois
-                        styled_df = (
-                            df.style
-                            .format({col: format_value for col in numeric_columns})  # Format personnalisé
-                            .apply(highlight_selected_season, axis=1)  # Coloration personnalisée
-                            .set_properties(**{"text-align": "center"})  # Centrage du texte
-                        )
-                        # Affichage du tableau
-                        st.subheader("⚽ Informations sur les statistiques générales de buts (en moyenne)")
-                        st.dataframe(styled_df)
-
-                    if compare_first_goal_team_data:
-                        # Transformation des données en DataFrame avec les noms de colonnes
-                        first_goal_season_data = pd.DataFrame([
-                            {
-                                "Saison": item["season_name"], "Équipe": item["team_name"],
-                                "1er but inscrit": item["proportion_1st_goal_for"], "Aucun but": item["proportion_no_goal"], "1er but encaissé": item["proportion_1st_goal_against"],
-                                "Domicile / 1er but inscrit": item["proportion_1st_goal_home_for"],"Domicile / Aucun but": item["proportion_no_goal_home"], "Domicile / 1er but encaissé": item["proportion_1st_goal_home_against"],
-                                "Extérieur / 1er but inscrit": item["proportion_1st_goal_away_for"], "Extérieur / Aucun but": item["proportion_no_goal_away"], "Extérieur / 1er but encaissé": item["proportion_1st_goal_away_against"],
-                                "1er but inscrit / Victoire": item["first_goal_win"], "1er but inscrit / Nul": item["first_goal_draw"],"1er but inscrit / Défaite": item["first_goal_lose"],                    
-                                "1er but inscrit / Domicile / Victoire": item["proportion_1st_goal_home_win"], "1er but inscrit / Domicile / Nul": item["proportion_1st_goal_home_draw"], "1er but inscrit / Domicile / Défaite": item["proportion_1st_goal_home_lose"],                            
-                                "1er but inscrit / Extérieur / Victoire": item["proportion_1st_goal_away_win"], "1er but inscrit / Extérieur / Nul": item["proportion_1st_goal_away_draw"], "1er but inscrit / Extérieur / Défaite": item["proportion_1st_goal_away_lose"],                                
-                                "1er but encaissé / Victoire": item["first_goal_conceded_win"],"1er but encaissé / Nul": item["first_goal_conceded_draw"], "1er but encaissé / Défaite": item["first_goal_conceded_lose"],                                
-                                "1er but encaissé / Domicile / Victoire": item["proportion_1st_goal_conceded_home_win"], "1er but encaissé / Domicile / Nul": item["proportion_1st_goal_conceded_home_draw"], "1er but encaissé / Domicile / Défaite": item["proportion_1st_goal_conceded_home_lose"],
-                                "1er but encaissé / Extérieur / Victoire": item["proportion_1st_goal_conceded_away_win"], "1er but encaissé / Extérieur / Nul": item["proportion_1st_goal_conceded_away_draw"], "1er but encaissé / Extérieur / Défaite": item["proportion_1st_goal_conceded_away_lose"]
-                            }
-                            for item in compare_first_goal_team_data
-                        ])
-                        first_goal_season_data = first_goal_season_data[first_goal_season_data["Équipe"] == selected_team] # Récupération des valeurs de l'équipe sélectionnée
-
-                        for col in first_goal_season_data.columns:
-                            if col != "Équipe" and col != "Saison":  # Exclure la colonne "Équipe" qui contient du texte
-                                first_goal_season_data[col] = pd.to_numeric(first_goal_season_data[col], errors='coerce')
-
-                        first_goal_season_data = first_goal_season_data.drop(columns=["Équipe"]) # Suppression de la colonne Équipe
-
-                        first_goal_season_data = first_goal_season_data.sort_values(by=["1er but inscrit"], ascending=False) # Tri des tableaux
-
-                        numeric_columns = first_goal_season_data.columns[1:]  # Exclure "Saison"
+                            if first_goal_season_stats:
+                                compare_first_goal_team_data.extend(first_goal_season_stats)
                             
-                        first_goal_season_data[numeric_columns] = first_goal_season_data[numeric_columns].astype(float) # Convertir en float
+                            if distrib_stats:
+                                compare_distrib_goal_data.extend(distrib_stats)    
 
-                        # On applique le style
-                        style_first_goal_season_data = (
-                            first_goal_season_data.style
-                            .format({col: format_value for col in numeric_columns})  # Format personnalisé
-                            .apply(highlight_selected_season, axis=1)  # Coloration personnalisée
-                            .set_properties(**{"text-align": "center"})  # Centrage du texte
-                        )
-                        # Affichage des tableaux avec formatage conditionnel
-                        st.subheader(f"⚽ Tableau sur le 1er but inscrit pour {selected_team} (en %)")
-                        st.dataframe(style_first_goal_season_data)
+                            if home_away_stats:
+                                compare_home_away_data.extend(home_away_stats)            
 
-                    if compare_distrib_goal_data:
-                        distrib_goal_data = pd.DataFrame([
-                            {
-                                "Saison": item["season_name"], "Équipe": item["team_name"],"1ère période (Proportion Buts inscrits)": item["proportion_buts_inscrit_1ere_periode"],
-                                "2ème période (Proportion Buts inscrits)": item["proportion_buts_inscrit_2nde_periode"], "0-15 min (Proportion Buts inscrits)": item["proportion_buts_0_15"],
-                                "16-30 min (Proportion Buts inscrits)": item["proportion_buts_16_30"],"31-45 min (Proportion Buts inscrits)": item["proportion_buts_31_45"],
-                                "46-60 min (Proportion Buts inscrits)": item["proportion_buts_46_60"], "61-75 min (Proportion Buts inscrits)": item["proportion_buts_61_75"],
-                                "76-90 min (Proportion Buts inscrits)": item["proportion_buts_76_90"], "1ère période (Proportion Buts concédés)": item["proportion_buts_encaissés_1ere_periode"],                               
-                                "2ème période (Proportion Buts concédés)": item["proportion_buts_encaissés_2nde_periode"], "0-15 min (Proportion Buts concédés)": item["proportion_buts_encaissés_0_15"],
-                                "16-30 min (Proportion Buts concédés)": item["proportion_buts_encaissés_16_30"], "31-45 min (Proportion Buts concédés)": item["proportion_buts_encaissés_31_45"],
-                                "46-60 min (Proportion Buts concédés)": item["proportion_buts_encaissés_46_60"], "61-75 min (Proportion Buts concédés)": item["proportion_buts_encaissés_61_75"],
-                                "76-90 min (Proportion Buts concédés)": item["proportion_buts_encaissés_76_90"], "1ère période (Buts inscrits)": item["buts_inscrit_1ere_periode"],
-                                "2ème période (Buts inscrits)": item["buts_inscrit_2nde_periode"], "0-15 min (Buts inscrits)": item["nbr_buts_0_15"],"16-30 min (Buts inscrits)": item["nbr_buts_16_30"],
-                                "31-45 min (Buts inscrits)": item["nbr_buts_31_45"], "46-60 min (Buts inscrits)": item["nbr_buts_46_60"], "61-75 min (Buts inscrits)": item["nbr_buts_61_75"],
-                                "76-90 min (Buts inscrits)": item["nbr_buts_76_90"], "1ère période (Buts concédés)": item["buts_encaissés_1ere_periode"],
-                                "2ème période (Buts concédés)": item["buts_encaissés_2nde_periode"], "0-15 min (Buts concédés)": item["buts_encaissés_0_15"], "16-30 min (Buts concédés)": item["buts_encaissés_16_30"],
-                                "31-45 min (Buts concédés)": item["buts_encaissés_31_45"], "46-60 min (Buts concédés)": item["buts_encaissés_46_60"],
-                                "61-75 min (Buts concédés)": item["buts_encaissés_61_75"], "76-90 min (Buts concédés)": item["buts_encaissés_76_90"]
+                        if compare_goals_season_team_data:
+                            # Transformation des données en DataFrame avec les noms de colonnes
+                            df = pd.DataFrame([
+                                {
+                                    "Saison": item["season_name"], "Équipe": item["team_name"], "Buts/Match": item["avg_goals_per_match"],
+                                    "Buts inscrits/Match": item["avg_team_goals_per_match"], "Buts concédés/Match": item["avg_team_goals_conceded_per_match"],
+                                    "Buts inscrits Domicile/Match": item["avg_team_home_goals"], "Buts inscrits Extérieur/Match": item["avg_team_away_goals"],
+                                    "Buts concédés Domicile/Match": item["avg_conceded_home_goals"], "Buts concédés Extérieur/Match": item["avg_conceded_away_goals"]
+                                }
+                                for item in compare_goals_season_team_data
+                            ])
+                            df = df[df["Équipe"] == selected_team] # Récupération des valeurs de l'équipe sélectionnée
 
-                            }
-                            for item in compare_distrib_goal_data
-                        ])
-                        
-                        distrib_goal_data = distrib_goal_data[distrib_goal_data["Équipe"] == selected_team] # Récupération des valeurs de l'équipe sélectionnée
+                            df = df.drop(columns=["Équipe"]) # On enlève la colonne Équipe du tableau que l'on va afficher
 
-                        distrib_goal_data = distrib_goal_data.drop(columns=["Équipe"]) # On enlève la colonne Équipe
-
-                        numeric_columns = distrib_goal_data.columns[1:] # On traite les données numériques
-                        distrib_goal_data[numeric_columns] = distrib_goal_data[numeric_columns].astype(float).round(2)  # Arrondi à 2 décimales
-
-                        distrib_goal_data = distrib_goal_data.sort_values(by=numeric_columns.tolist(), ascending=False) # Assurer un tri numérique et non alphabétique
-                        
-                        # On applique le style
-                        styled_distrib_goal_data = (
-                            distrib_goal_data.style
-                            .format({col: format_value for col in numeric_columns})  # Format personnalisé
-                            .apply(highlight_selected_season, axis=1)  # Coloration personnalisée pour la saison sélectionné
-                            .set_properties(**{"text-align": "center"})  # Centrage du texte
-                        )
-
-                        # Affichage du tableau mis en forme avec tri
-                        st.subheader("⚽ Informations sur la distribution des buts par saison (en %)")
-                        st.dataframe(styled_distrib_goal_data)
-
-                    if compare_home_away_data:
-                        # Transformation des données en DataFrame avec les noms de colonnes
-                        df_adv_home_away_complete = pd.DataFrame([
-                            {
-                                "Type": item["type"], "Saison": item["season_name"], "Équipe": item["team_name"], "Matches joués": item["matches"],
-                                "Victoire (en %)": item["wins"], "Match Nul (en %)": item["draws"], "Défaite (en %)": item["losses"],
-                                "Points": item["points"], "Nbr de points moyen": item["avg_points"], "Avantage du Terrain": item["home_advantage"]
-                            }
-                            for item in compare_home_away_data
-                        ])
-
-                        # Copie explicite pour éviter les warnings
-                        df_adv_home_away_team = df_adv_home_away_complete[df_adv_home_away_complete["Équipe"] == selected_team].copy()
-
-                        # Convertir les colonnes numériques en float et arrondir à 2 décimales
-                        numeric_columns = [col for col in df_adv_home_away_team.columns if col not in ["Équipe", "Saison", "Type"]]
-                        df_adv_home_away_team[numeric_columns] = df_adv_home_away_team[numeric_columns].astype(float).apply(
-                            lambda col: col.round(2).fillna(0)
-                        )
-
-                        # Récupération des valeurs selon le facteur Domicile/Extérieur avec copie explicite
-                        data_home = df_adv_home_away_team[df_adv_home_away_team["Type"] == "Home"].copy()
-                        data_away = df_adv_home_away_team[df_adv_home_away_team["Type"] == "Away"].copy()
-
-                        # Retrait des colonnes inutiles
-                        data_home = data_home.drop(columns=["Équipe", "Type"])
-                        data_away = data_away.drop(columns=["Équipe", "Type"])
-
-                        if not data_home.empty:
-                            # Calcul des pourcentages en évitant la division par 0
-                            for col in ["Victoire (en %)", "Match Nul (en %)", "Défaite (en %)"]:
-                                data_home[col] = (data_home[col] / data_home["Matches joués"].replace(0, np.nan)) * 100
-                                data_home[col] = data_home[col].round(2).fillna(0)
-
-                            data_home = data_home.sort_values(by=["Points"], ascending=False)
-                            style_data_home = (
-                                data_home.style
-                                .format({col: format_value for col in data_home.columns[1:]})  # Format des nombres
-                                .apply(highlight_selected_season, axis=1)
-                                .set_properties(**{"text-align": "center"})
+                            numeric_columns = df.columns[1:]  # Sélectionne les colonnes numériques
+                            # Arrondir et convertir les valeurs numériques
+                            df[numeric_columns] = df[numeric_columns].astype(float).applymap(lambda x: round(x, 2) if pd.notnull(x) else 0)
+                            
+                            df = df.sort_values(by=numeric_columns.tolist(), ascending=False) # Trier le tableau
+                            
+                            # Appliquer le style de formatage et la coloration en une seule fois
+                            styled_df = (
+                                df.style
+                                .format({col: format_value for col in numeric_columns})  # Format personnalisé
+                                .apply(highlight_selected_season, axis=1)  # Coloration personnalisée
+                                .set_properties(**{"text-align": "center"})  # Centrage du texte
                             )
-                            st.subheader(f"⚽ Informations sur les performances à domicile de {selected_team} (toutes saisons)")
-                            st.dataframe(style_data_home)
+                            # Affichage du tableau
+                            st.subheader("⚽ Informations sur les statistiques générales de buts (en moyenne)")
+                            st.dataframe(styled_df)
 
-                        if not data_away.empty:
-                            # Calcul des pourcentages en évitant la division par 0
-                            for col in ["Victoire (en %)", "Match Nul (en %)", "Défaite (en %)"]:
-                                data_away[col] = (data_away[col] / data_away["Matches joués"].replace(0, np.nan)) * 100
-                                data_away[col] = data_away[col].round(2).fillna(0)
+                        if compare_first_goal_team_data:
+                            # Transformation des données en DataFrame avec les noms de colonnes
+                            first_goal_season_data = pd.DataFrame([
+                                {
+                                    "Saison": item["season_name"], "Équipe": item["team_name"],
+                                    "1er but inscrit": item["proportion_1st_goal_for"], "Aucun but": item["proportion_no_goal"], "1er but encaissé": item["proportion_1st_goal_against"],
+                                    "Domicile / 1er but inscrit": item["proportion_1st_goal_home_for"],"Domicile / Aucun but": item["proportion_no_goal_home"], "Domicile / 1er but encaissé": item["proportion_1st_goal_home_against"],
+                                    "Extérieur / 1er but inscrit": item["proportion_1st_goal_away_for"], "Extérieur / Aucun but": item["proportion_no_goal_away"], "Extérieur / 1er but encaissé": item["proportion_1st_goal_away_against"],
+                                    "1er but inscrit / Victoire": item["first_goal_win"], "1er but inscrit / Nul": item["first_goal_draw"],"1er but inscrit / Défaite": item["first_goal_lose"],                    
+                                    "1er but inscrit / Domicile / Victoire": item["proportion_1st_goal_home_win"], "1er but inscrit / Domicile / Nul": item["proportion_1st_goal_home_draw"], "1er but inscrit / Domicile / Défaite": item["proportion_1st_goal_home_lose"],                            
+                                    "1er but inscrit / Extérieur / Victoire": item["proportion_1st_goal_away_win"], "1er but inscrit / Extérieur / Nul": item["proportion_1st_goal_away_draw"], "1er but inscrit / Extérieur / Défaite": item["proportion_1st_goal_away_lose"],                                
+                                    "1er but encaissé / Victoire": item["first_goal_conceded_win"],"1er but encaissé / Nul": item["first_goal_conceded_draw"], "1er but encaissé / Défaite": item["first_goal_conceded_lose"],                                
+                                    "1er but encaissé / Domicile / Victoire": item["proportion_1st_goal_conceded_home_win"], "1er but encaissé / Domicile / Nul": item["proportion_1st_goal_conceded_home_draw"], "1er but encaissé / Domicile / Défaite": item["proportion_1st_goal_conceded_home_lose"],
+                                    "1er but encaissé / Extérieur / Victoire": item["proportion_1st_goal_conceded_away_win"], "1er but encaissé / Extérieur / Nul": item["proportion_1st_goal_conceded_away_draw"], "1er but encaissé / Extérieur / Défaite": item["proportion_1st_goal_conceded_away_lose"]
+                                }
+                                for item in compare_first_goal_team_data
+                            ])
+                            first_goal_season_data = first_goal_season_data[first_goal_season_data["Équipe"] == selected_team] # Récupération des valeurs de l'équipe sélectionnée
 
-                            data_away = data_away.sort_values(by=["Points"], ascending=False)
-                            style_data_away = (
-                                data_away.style
-                                .format({col: format_value for col in data_away.columns[1:]})  # Format des nombres
-                                .apply(highlight_selected_season, axis=1)
-                                .set_properties(**{"text-align": "center"})
+                            for col in first_goal_season_data.columns:
+                                if col != "Équipe" and col != "Saison":  # Exclure la colonne "Équipe" qui contient du texte
+                                    first_goal_season_data[col] = pd.to_numeric(first_goal_season_data[col], errors='coerce')
+
+                            first_goal_season_data = first_goal_season_data.drop(columns=["Équipe"]) # Suppression de la colonne Équipe
+
+                            first_goal_season_data = first_goal_season_data.sort_values(by=["1er but inscrit"], ascending=False) # Tri des tableaux
+
+                            numeric_columns = first_goal_season_data.columns[1:]  # Exclure "Saison"
+                                
+                            first_goal_season_data[numeric_columns] = first_goal_season_data[numeric_columns].astype(float) # Convertir en float
+
+                            # On applique le style
+                            style_first_goal_season_data = (
+                                first_goal_season_data.style
+                                .format({col: format_value for col in numeric_columns})  # Format personnalisé
+                                .apply(highlight_selected_season, axis=1)  # Coloration personnalisée
+                                .set_properties(**{"text-align": "center"})  # Centrage du texte
                             )
-                            st.subheader(f"⚽ Informations sur les performances à l'extérieur de {selected_team} (toutes saisons)")
-                            st.dataframe(style_data_away)
+                            # Affichage des tableaux avec formatage conditionnel
+                            st.subheader(f"⚽ Tableau sur le 1er but inscrit pour {selected_team} (en %)")
+                            st.dataframe(style_first_goal_season_data)
+
+                        if compare_distrib_goal_data:
+                            distrib_goal_data = pd.DataFrame([
+                                {
+                                    "Saison": item["season_name"], "Équipe": item["team_name"],"1ère période (Proportion Buts inscrits)": item["proportion_buts_inscrit_1ere_periode"],
+                                    "2ème période (Proportion Buts inscrits)": item["proportion_buts_inscrit_2nde_periode"], "0-15 min (Proportion Buts inscrits)": item["proportion_buts_0_15"],
+                                    "16-30 min (Proportion Buts inscrits)": item["proportion_buts_16_30"],"31-45 min (Proportion Buts inscrits)": item["proportion_buts_31_45"],
+                                    "46-60 min (Proportion Buts inscrits)": item["proportion_buts_46_60"], "61-75 min (Proportion Buts inscrits)": item["proportion_buts_61_75"],
+                                    "76-90 min (Proportion Buts inscrits)": item["proportion_buts_76_90"], "1ère période (Proportion Buts concédés)": item["proportion_buts_encaissés_1ere_periode"],                               
+                                    "2ème période (Proportion Buts concédés)": item["proportion_buts_encaissés_2nde_periode"], "0-15 min (Proportion Buts concédés)": item["proportion_buts_encaissés_0_15"],
+                                    "16-30 min (Proportion Buts concédés)": item["proportion_buts_encaissés_16_30"], "31-45 min (Proportion Buts concédés)": item["proportion_buts_encaissés_31_45"],
+                                    "46-60 min (Proportion Buts concédés)": item["proportion_buts_encaissés_46_60"], "61-75 min (Proportion Buts concédés)": item["proportion_buts_encaissés_61_75"],
+                                    "76-90 min (Proportion Buts concédés)": item["proportion_buts_encaissés_76_90"], "1ère période (Buts inscrits)": item["buts_inscrit_1ere_periode"],
+                                    "2ème période (Buts inscrits)": item["buts_inscrit_2nde_periode"], "0-15 min (Buts inscrits)": item["nbr_buts_0_15"],"16-30 min (Buts inscrits)": item["nbr_buts_16_30"],
+                                    "31-45 min (Buts inscrits)": item["nbr_buts_31_45"], "46-60 min (Buts inscrits)": item["nbr_buts_46_60"], "61-75 min (Buts inscrits)": item["nbr_buts_61_75"],
+                                    "76-90 min (Buts inscrits)": item["nbr_buts_76_90"], "1ère période (Buts concédés)": item["buts_encaissés_1ere_periode"],
+                                    "2ème période (Buts concédés)": item["buts_encaissés_2nde_periode"], "0-15 min (Buts concédés)": item["buts_encaissés_0_15"], "16-30 min (Buts concédés)": item["buts_encaissés_16_30"],
+                                    "31-45 min (Buts concédés)": item["buts_encaissés_31_45"], "46-60 min (Buts concédés)": item["buts_encaissés_46_60"],
+                                    "61-75 min (Buts concédés)": item["buts_encaissés_61_75"], "76-90 min (Buts concédés)": item["buts_encaissés_76_90"]
+
+                                }
+                                for item in compare_distrib_goal_data
+                            ])
+                            
+                            distrib_goal_data = distrib_goal_data[distrib_goal_data["Équipe"] == selected_team] # Récupération des valeurs de l'équipe sélectionnée
+
+                            distrib_goal_data = distrib_goal_data.drop(columns=["Équipe"]) # On enlève la colonne Équipe
+
+                            numeric_columns = distrib_goal_data.columns[1:] # On traite les données numériques
+                            distrib_goal_data[numeric_columns] = distrib_goal_data[numeric_columns].astype(float).round(2)  # Arrondi à 2 décimales
+
+                            distrib_goal_data = distrib_goal_data.sort_values(by=numeric_columns.tolist(), ascending=False) # Assurer un tri numérique et non alphabétique
+                            
+                            # On applique le style
+                            styled_distrib_goal_data = (
+                                distrib_goal_data.style
+                                .format({col: format_value for col in numeric_columns})  # Format personnalisé
+                                .apply(highlight_selected_season, axis=1)  # Coloration personnalisée pour la saison sélectionné
+                                .set_properties(**{"text-align": "center"})  # Centrage du texte
+                            )
+
+                            # Affichage du tableau mis en forme avec tri
+                            st.subheader("⚽ Informations sur la distribution des buts par saison (en %)")
+                            st.dataframe(styled_distrib_goal_data)
+
+                        if compare_home_away_data:
+                            # Transformation des données en DataFrame avec les noms de colonnes
+                            df_adv_home_away_complete = pd.DataFrame([
+                                {
+                                    "Type": item["type"], "Saison": item["season_name"], "Équipe": item["team_name"], "Matches joués": item["matches"],
+                                    "Victoire (en %)": item["wins"], "Match Nul (en %)": item["draws"], "Défaite (en %)": item["losses"],
+                                    "Points": item["points"], "Nbr de points moyen": item["avg_points"], "Avantage du Terrain": item["home_advantage"]
+                                }
+                                for item in compare_home_away_data
+                            ])
+
+                            # Copie explicite pour éviter les warnings
+                            df_adv_home_away_team = df_adv_home_away_complete[df_adv_home_away_complete["Équipe"] == selected_team].copy()
+
+                            # Convertir les colonnes numériques en float et arrondir à 2 décimales
+                            numeric_columns = [col for col in df_adv_home_away_team.columns if col not in ["Équipe", "Saison", "Type"]]
+                            df_adv_home_away_team[numeric_columns] = df_adv_home_away_team[numeric_columns].astype(float).apply(
+                                lambda col: col.round(2).fillna(0)
+                            )
+
+                            # Récupération des valeurs selon le facteur Domicile/Extérieur avec copie explicite
+                            data_home = df_adv_home_away_team[df_adv_home_away_team["Type"] == "Home"].copy()
+                            data_away = df_adv_home_away_team[df_adv_home_away_team["Type"] == "Away"].copy()
+
+                            # Retrait des colonnes inutiles
+                            data_home = data_home.drop(columns=["Équipe", "Type"])
+                            data_away = data_away.drop(columns=["Équipe", "Type"])
+
+                            if not data_home.empty:
+                                # Calcul des pourcentages en évitant la division par 0
+                                for col in ["Victoire (en %)", "Match Nul (en %)", "Défaite (en %)"]:
+                                    data_home[col] = (data_home[col] / data_home["Matches joués"].replace(0, np.nan)) * 100
+                                    data_home[col] = data_home[col].round(2).fillna(0)
+
+                                data_home = data_home.sort_values(by=["Points"], ascending=False)
+                                style_data_home = (
+                                    data_home.style
+                                    .format({col: format_value for col in data_home.columns[1:]})  # Format des nombres
+                                    .apply(highlight_selected_season, axis=1)
+                                    .set_properties(**{"text-align": "center"})
+                                )
+                                st.subheader(f"⚽ Informations sur les performances à domicile de {selected_team} (toutes saisons)")
+                                st.dataframe(style_data_home)
+
+                            if not data_away.empty:
+                                # Calcul des pourcentages en évitant la division par 0
+                                for col in ["Victoire (en %)", "Match Nul (en %)", "Défaite (en %)"]:
+                                    data_away[col] = (data_away[col] / data_away["Matches joués"].replace(0, np.nan)) * 100
+                                    data_away[col] = data_away[col].round(2).fillna(0)
+
+                                data_away = data_away.sort_values(by=["Points"], ascending=False)
+                                style_data_away = (
+                                    data_away.style
+                                    .format({col: format_value for col in data_away.columns[1:]})  # Format des nombres
+                                    .apply(highlight_selected_season, axis=1)
+                                    .set_properties(**{"text-align": "center"})
+                                )
+                                st.subheader(f"⚽ Informations sur les performances à l'extérieur de {selected_team} (toutes saisons)")
+                                st.dataframe(style_data_away)
 
 # Affichage de l’image uniquement si aucun choix n'a été fait
 if show_image:
