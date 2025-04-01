@@ -883,9 +883,7 @@ if teams_available:
 
                         numeric_columns = df.columns[1:]  # Sélectionne les colonnes numériques
                         # Arrondir et convertir les valeurs numériques
-                        df[numeric_columns] = df[numeric_columns].applymap(
-                            lambda x: int(x) if pd.notnull(x) and x == int(x) else (round(x, 2) if pd.notnull(x) else 0)
-                        )
+                        df[numeric_columns] = df[numeric_columns].astype(float).applymap(lambda x: round(x, 2) if pd.notnull(x) else 0)
                         
                         df = df.sort_values(by=numeric_columns.tolist(), ascending=False) # Trier le tableau
                         
@@ -1000,10 +998,9 @@ if teams_available:
                         # Copie explicite pour éviter les warnings
                         df_adv_home_away_team = df_adv_home_away_complete[df_adv_home_away_complete["Équipe"] == selected_team].copy()
 
-                        for col in df_adv_home_away_team.columns:
-                            if col not in ["Équipe", "Saison", "Type"]:
-                                # Utilisation de .loc pour des assignations sûres
-                                df_adv_home_away_team.loc[:, col] = pd.to_numeric(df_adv_home_away_team[col], errors='coerce')
+                        # Convertir les colonnes numériques en float et arrondir à 2 décimales
+                        numeric_columns = [col for col in df_adv_home_away_team.columns if col not in ["Équipe", "Saison", "Type"]]
+                        df_adv_home_away_team[numeric_columns] = df_adv_home_away_team[numeric_columns].astype(float).applymap(lambda x: round(x, 2) if pd.notnull(x) else 0)
 
                         # Récupération des valeurs selon le facteur Domicile/Extérieur avec copie explicite
                         data_home = df_adv_home_away_team[df_adv_home_away_team["Type"] == "Home"].copy()
@@ -1014,15 +1011,15 @@ if teams_available:
                         data_away = data_away.drop(columns=["Équipe", "Type"])
 
                         if not data_home.empty:
-                            # Utilisation de .loc pour l'assignation conditionnelle
-                            data_home.loc[:, ["Victoire (en %)", "Match Nul (en %)", "Défaite (en %)"]] = (
-                                data_home[["Victoire (en %)", "Match Nul (en %)", "Défaite (en %)"]].div(data_home["Matches joués"], axis=0)
-                            ) * 100
+                            # Calcul des pourcentages et arrondi
+                            for col in ["Victoire (en %)", "Match Nul (en %)", "Défaite (en %)"]:
+                                data_home[col] = (data_home[col] / data_home["Matches joués"]) * 100
+                                data_home[col] = data_home[col].round(2)  # Arrondi à 2 décimales
 
                             data_home = data_home.sort_values(by=["Points"], ascending=False)
                             style_data_home = (
                                 data_home.style
-                                .format({col: format_value for col in data_home.columns[1:]})
+                                .format({col: format_value for col in data_home.columns[1:]})  # Format des nombres
                                 .apply(highlight_selected_season, axis=1)
                                 .set_properties(**{"text-align": "center"})
                             )
@@ -1030,20 +1027,21 @@ if teams_available:
                             st.dataframe(style_data_home)
 
                         if not data_away.empty:
-                            # Utilisation de .loc pour l'assignation conditionnelle
-                            data_away.loc[:, ["Victoire (en %)", "Match Nul (en %)", "Défaite (en %)"]] = (
-                                data_away[["Victoire (en %)", "Match Nul (en %)", "Défaite (en %)"]].div(data_away["Matches joués"], axis=0)
-                            ) * 100
+                            # Calcul des pourcentages et arrondi
+                            for col in ["Victoire (en %)", "Match Nul (en %)", "Défaite (en %)"]:
+                                data_away[col] = (data_away[col] / data_away["Matches joués"]) * 100
+                                data_away[col] = data_away[col].round(2)  # Arrondi à 2 décimales
 
                             data_away = data_away.sort_values(by=["Points"], ascending=False)
                             style_data_away = (
                                 data_away.style
-                                .format({col: format_value for col in data_away.columns[1:]})
+                                .format({col: format_value for col in data_away.columns[1:]})  # Format des nombres
                                 .apply(highlight_selected_season, axis=1)
                                 .set_properties(**{"text-align": "center"})
                             )
                             st.subheader(f"⚽ Informations sur les performances à l'extérieur de {selected_team} (toutes saisons)")
                             st.dataframe(style_data_away)
+
 
 # Affichage de l’image uniquement si aucun choix n'a été fait
 if show_image:
