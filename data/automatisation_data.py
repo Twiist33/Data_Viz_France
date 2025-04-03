@@ -230,6 +230,7 @@ def scrape_and_store_seasons():
             except Exception:
                 print("Aucune bannière de cookies détectée.")
     
+
             # Définir les saisons ciblées en fonction de la compétition
             if id_competition in [34, 182, 183, 1139]: # Ligue 1, Ligue 2, National 1, D1 Féminine
                 targeted_seasons = ["16/17", "17/18", "18/19", "19/20", "20/21", "24/25", "23/24", "22/23", "21/22", "2024/25"]
@@ -271,10 +272,10 @@ def scrape_and_store_seasons():
                             id_season = int(parts[-1].split('#id:')[-1])         
                             competition_name = " ".join(parts[-2].split('-')).title()
                             season_name = f"{competition_name} {season}"
-                            print(f"Extrait : ID Saison = {id_season}, Nom = {season_name}, Lien = {current_url}")                        
+                            #print(f"Extrait : ID Saison = {id_season}, Nom = {season_name}, Lien = {current_url}")                        
                             
                             if id_season in season_already_records:
-                                print(f" (ID Saison: {id_season}) déjà enregistrée, passage à la suivante.")
+                                #print(f" (ID Saison: {id_season}) déjà enregistrée, passage à la suivante.")
                                 continue 
 
                             # Ajouter l'objet Season
@@ -516,11 +517,9 @@ def init_function_goals():
     cursor.execute("SELECT id_match FROM info_goal;")
     info_matchs_goal = {row[0] for row in cursor.fetchall()}  # Conversion en set d'entiers
 
-    # On effectue la requête pour obtenir les identifiants des saisons déjà enregistrées
-    cursor.execute("""SELECT DISTINCT s.id_season FROM season s JOIN info_match im ON s.id_season = im.id_season JOIN info_goal ig ON im.id_match = ig.id_match 
-        WHERE s.season_name NOT LIKE '%24/25%' AND s.season_name NOT LIKE '%2024/25%';
+    # On effectue la requête pour obtenir les identifiants des matchs dejà dans la base
+    cursor.execute("""SELECT DISTINCT s.id_season FROM season s JOIN info_match im ON s.id_season = im.id_season JOIN info_goal ig ON im.id_match = ig.id_match  WHERE s.season_name NOT LIKE '%24/25%' AND s.season_name NOT LIKE '%2024/25%';
     """)
-
     not_current_season_and_already_stored = {row[0] for row in cursor.fetchall()}  # Conversion en set d'entiers
 
     return conn, supabase, info_matchs, info_matchs_goal, not_current_season_and_already_stored
