@@ -67,6 +67,9 @@ class Season(BaseModel):
 def insert_seasons(seasons_df, supabase):
     # Vérification si le DataFrame est vide avant d'essayer de l'insérer
     if not seasons_df.empty:
+        # Supprimer les doublons potentiels sur id_season
+        seasons_df = seasons_df.drop_duplicates(subset=["id_season"])
+        
         # Conversion du DataFrame en une liste de dictionnaires pour correspondre au format attendu par Supabase
         seasons = [Season(**x).dict() for x in seasons_df.to_dict(orient='records')]
         
@@ -268,10 +271,10 @@ def scrape_and_store_seasons():
                             id_season = int(parts[-1].split('#id:')[-1])         
                             competition_name = " ".join(parts[-2].split('-')).title()
                             season_name = f"{competition_name} {season}"
-                            #print(f"Extrait : ID Saison = {id_season}, Nom = {season_name}, Lien = {current_url}")                        
+                            print(f"Extrait : ID Saison = {id_season}, Nom = {season_name}, Lien = {current_url}")                        
                             
                             if id_season in season_already_records:
-                                #print(f" (ID Saison: {id_season}) déjà enregistrée, passage à la suivante.")
+                                print(f" (ID Saison: {id_season}) déjà enregistrée, passage à la suivante.")
                                 continue 
 
                             # Ajouter l'objet Season
@@ -513,8 +516,10 @@ def init_function_goals():
     cursor.execute("SELECT id_match FROM info_goal;")
     info_matchs_goal = {row[0] for row in cursor.fetchall()}  # Conversion en set d'entiers
 
-    # On effectue la requête pour obtenir les identifiants des matchs dejà dans la base
-    cursor.execute("SELECT DISTINCT s.id_season FROM season s JOIN info_match im ON s.id_season = im.id_season WHERE s.season_name NOT LIKE '%24/25%' AND s.season_name NOT LIKE '%2024/25%';")
+    # On effectue la requête pour obtenir les identifiants des saisons déjà enregistré
+    cursor.execute("""SELECT DISTINCT s.id_season FROM season s LEFT JOIN info_match im ON s.id_season = im.id_season LEFT JOIN info_goal ig ON im.id_match = ig.id_match 
+        WHERE s.season_name NOT LIKE '%24/25%' AND s.season_name NOT LIKE '%2024/25%' AND (im.id_season IS NOT NULL OR ig.id_match IS NOT NULL);
+    """)
     not_current_season_and_already_stored = {row[0] for row in cursor.fetchall()}  # Conversion en set d'entiers
 
     return conn, supabase, info_matchs, info_matchs_goal, not_current_season_and_already_stored
