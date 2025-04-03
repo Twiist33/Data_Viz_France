@@ -233,7 +233,7 @@ def scrape_and_store_seasons():
 
             # Définir les saisons ciblées en fonction de la compétition
             if id_competition in [34, 182, 183, 1139]:
-                targeted_seasons = [ "20/21", "19/20", "18/19", "17/18", "16/17"  ]
+                targeted_seasons = [ "20/21", "18/19", "16/17"  ]
             else:
                 targeted_seasons = ["24/25", "2024/25"]
 
