@@ -273,10 +273,10 @@ def scrape_and_store_seasons():
                             id_season = int(parts[-1].split('#id:')[-1])         
                             competition_name = " ".join(parts[-2].split('-')).title()
                             season_name = f"{competition_name} {season}"
-                            #print(f"Extrait : ID Saison = {id_season}, Nom = {season_name}, Lien = {current_url}")                        
+                            print(f"Extrait : ID Saison = {id_season}, Nom = {season_name}, Lien = {current_url}")                        
                             
                             if id_season in season_already_records:
-                                #print(f" (ID Saison: {id_season}) déjà enregistrée, passage à la suivante.")
+                                print(f" (ID Saison: {id_season}) déjà enregistrée, passage à la suivante.")
                                 continue 
 
                             # Ajouter l'objet Season
@@ -495,8 +495,10 @@ def scrape_and_store_matches():
         insert_matchs(matches_df, supabase)
 
     finally:
-        if 'driver' in locals() and driver is not None:
+        try:
             driver.quit()
+        except NameError:
+            pass  # driver n'a jamais été défini, donc on ignore l'erreur
 
 def init_function_goals():
     # 🔹 Connexion à la base PostgreSQL et Supabase
