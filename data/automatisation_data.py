@@ -69,7 +69,7 @@ def insert_seasons(seasons_df, supabase):
     if not seasons_df.empty:
         # Supprimer les doublons potentiels sur id_season
         seasons_df = seasons_df.drop_duplicates(subset=["id_season"])
-        
+
         # Conversion du DataFrame en une liste de dictionnaires pour correspondre au format attendu par Supabase
         seasons = [Season(**x).dict() for x in seasons_df.to_dict(orient='records')]
         
@@ -517,9 +517,10 @@ def init_function_goals():
     info_matchs_goal = {row[0] for row in cursor.fetchall()}  # Conversion en set d'entiers
 
     # On effectue la requête pour obtenir les identifiants des saisons déjà enregistré
-    cursor.execute("""SELECT DISTINCT s.id_season FROM season s LEFT JOIN info_match im ON s.id_season = im.id_season LEFT JOIN info_goal ig ON im.id_match = ig.id_match 
-        WHERE s.season_name NOT LIKE '%24/25%' AND s.season_name NOT LIKE '%2024/25%' AND (im.id_season IS NOT NULL OR ig.id_match IS NOT NULL);
+    cursor.execute("""SELECT DISTINCT s.id_season FROM season s JOIN info_match im ON s.id_season = im.id_season JOIN info_goal ig ON im.id_match = ig.id_match 
+        WHERE s.season_name NOT LIKE '%24/25%' AND s.season_name NOT LIKE '%2024/25%';
     """)
+
     not_current_season_and_already_stored = {row[0] for row in cursor.fetchall()}  # Conversion en set d'entiers
 
     return conn, supabase, info_matchs, info_matchs_goal, not_current_season_and_already_stored
