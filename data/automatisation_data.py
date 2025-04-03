@@ -232,8 +232,8 @@ def scrape_and_store_seasons():
     
 
             # Définir les saisons ciblées en fonction de la compétition
-            if id_competition in [34, 182, 183, 1139]: # Ligue 1, Ligue 2, National 1, D1 Féminine
-                targeted_seasons = ["16/17", "17/18", "18/19", "19/20", "20/21", "24/25", "23/24", "22/23", "21/22", "2024/25"]
+            if id_competition in [34, 182, 183, 1139]:
+                targeted_seasons = [ "24/25", "23/24", "22/23", "21/22", "2024/25",  "20/21", "19/20", "18/19", "17/18", "16/17"  ]
             else:
                 targeted_seasons = ["24/25", "23/24", "22/23", "21/22", "2024/25"]
 
@@ -241,6 +241,7 @@ def scrape_and_store_seasons():
     
             for season in targeted_seasons:
                 try:
+                    
                     # Rechercher et cliquer sur le bouton du menu déroulant
                     dropdown_button = WebDriverWait(driver, 10).until(
                         EC.element_to_be_clickable((By.CLASS_NAME, "DropdownButton"))
