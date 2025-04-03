@@ -516,7 +516,7 @@ def init_function_goals():
     cursor.execute("SELECT id_match FROM info_goal;")
     info_matchs_goal = {row[0] for row in cursor.fetchall()}  # Conversion en set d'entiers
 
-    # On effectue la requête pour obtenir les identifiants des saisons déjà enregistré
+    # On effectue la requête pour obtenir les identifiants des saisons déjà enregistrées
     cursor.execute("""SELECT DISTINCT s.id_season FROM season s JOIN info_match im ON s.id_season = im.id_season JOIN info_goal ig ON im.id_match = ig.id_match 
         WHERE s.season_name NOT LIKE '%24/25%' AND s.season_name NOT LIKE '%2024/25%';
     """)
