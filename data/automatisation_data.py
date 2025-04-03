@@ -230,7 +230,7 @@ def scrape_and_store_seasons():
             except Exception:
                 print("Aucune bannière de cookies détectée.")
     
-            # Définir les saisons ciblées en fonction de l'id_competition
+            # Définir les saisons ciblées en fonction de la compétition
             if id_competition in [34, 182, 183, 1139]: # Ligue 1, Ligue 2, National 1, D1 Féminine
                 targeted_seasons = ["16/17", "17/18", "18/19", "19/20", "20/21", "24/25", "23/24", "22/23", "21/22", "2024/25"]
             else:
