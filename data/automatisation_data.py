@@ -495,7 +495,8 @@ def scrape_and_store_matches():
         insert_matchs(matches_df, supabase)
 
     finally:
-        driver.quit()
+        if 'driver' in locals() and driver is not None:
+            driver.quit()
 
 def init_function_goals():
     # 🔹 Connexion à la base PostgreSQL et Supabase
@@ -507,7 +508,7 @@ def init_function_goals():
     if not supabase:
         return
 
-    # On effectue la requête pour obtenir les liens url des matchs
+    # On effectue la requête pour obtenir les liens url des matchs dans info_match
     cursor = conn.cursor()
     cursor.execute("""
             SELECT id_match, link_url, id_season FROM info_match;
@@ -515,10 +516,11 @@ def init_function_goals():
 
     info_matchs = cursor.fetchall()
 
+    # On récupére les identifiants des matchs déjà dans info_goal
     cursor.execute("SELECT id_match FROM info_goal;")
     info_matchs_goal = {row[0] for row in cursor.fetchall()}  # Conversion en set d'entiers
 
-    # On effectue la requête pour obtenir les identifiants des matchs dejà dans la base
+    # On effectue la requête pour obtenir les identifiants des saisons déjà dans la base hormis la saison en cours
     cursor.execute("""SELECT DISTINCT s.id_season FROM season s JOIN info_match im ON s.id_season = im.id_season JOIN info_goal ig ON im.id_match = ig.id_match  WHERE s.season_name NOT LIKE '%24/25%' AND s.season_name NOT LIKE '%2024/25%';
     """)
     not_current_season_and_already_stored = {row[0] for row in cursor.fetchall()}  # Conversion en set d'entiers
