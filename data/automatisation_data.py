@@ -67,9 +67,6 @@ class Season(BaseModel):
 def insert_seasons(seasons_df, supabase):
     # Vérification si le DataFrame est vide avant d'essayer de l'insérer
     if not seasons_df.empty:
-        # Supprimer les doublons potentiels sur id_season
-        seasons_df = seasons_df.drop_duplicates(subset=["id_season"])
-
         # Conversion du DataFrame en une liste de dictionnaires pour correspondre au format attendu par Supabase
         seasons = [Season(**x).dict() for x in seasons_df.to_dict(orient='records')]
         
@@ -230,23 +227,13 @@ def scrape_and_store_seasons():
             except Exception:
                 print("Aucune bannière de cookies détectée.")
     
-
-            # Définir les saisons ciblées en fonction de la compétition
-            if id_competition in [34, 182, 183, 1139]:
-                targeted_seasons = [ "20/21", "18/19", "16/17"  ]
-            else:
-                targeted_seasons = ["24/25", "2024/25"]
-
-            # Définir les saisons ciblées en fonction de la compétition
-            #if id_competition in [34, 182, 183, 1139]:
-                #targeted_seasons = [ "24/25", "23/24", "22/23", "21/22", "2024/25",  "20/21", "19/20", "18/19", "17/18", "16/17"  ]
-            #else:
-                #targeted_seasons = ["24/25", "23/24", "22/23", "21/22", "2024/25"]
+            # Boucler sur les saisons ciblées
+            targeted_seasons = ["24/25", "23/24", "22/23", "21/22","2024/25"]
+    
             season_found = False  # Flag pour savoir si on trouve une saison valide
     
             for season in targeted_seasons:
                 try:
-                    
                     # Rechercher et cliquer sur le bouton du menu déroulant
                     dropdown_button = WebDriverWait(driver, 10).until(
                         EC.element_to_be_clickable((By.CLASS_NAME, "DropdownButton"))
@@ -278,10 +265,10 @@ def scrape_and_store_seasons():
                             id_season = int(parts[-1].split('#id:')[-1])         
                             competition_name = " ".join(parts[-2].split('-')).title()
                             season_name = f"{competition_name} {season}"
-                            print(f"Extrait : ID Saison = {id_season}, Nom = {season_name}, Lien = {current_url}")                        
+                            #print(f"Extrait : ID Saison = {id_season}, Nom = {season_name}, Lien = {current_url}")                        
                             
                             if id_season in season_already_records:
-                                print(f" (ID Saison: {id_season}) déjà enregistrée, passage à la suivante.")
+                                #print(f" (ID Saison: {id_season}) déjà enregistrée, passage à la suivante.")
                                 continue 
 
                             # Ajouter l'objet Season
@@ -500,11 +487,9 @@ def scrape_and_store_matches():
         insert_matchs(matches_df, supabase)
 
     finally:
-        try:
+        if 'driver' in locals() and driver is not None:
             driver.quit()
-        except NameError:
-            pass  # driver n'a jamais été défini, donc on ignore l'erreur
-
+            
 def init_function_goals():
     # 🔹 Connexion à la base PostgreSQL et Supabase
     conn = connect_to_db()
@@ -515,7 +500,7 @@ def init_function_goals():
     if not supabase:
         return
 
-    # On effectue la requête pour obtenir les liens url des matchs dans info_match
+    # On effectue la requête pour obtenir les liens url des matchs
     cursor = conn.cursor()
     cursor.execute("""
             SELECT id_match, link_url, id_season FROM info_match;
@@ -523,13 +508,11 @@ def init_function_goals():
 
     info_matchs = cursor.fetchall()
 
-    # On récupére les identifiants des matchs déjà dans info_goal
     cursor.execute("SELECT id_match FROM info_goal;")
     info_matchs_goal = {row[0] for row in cursor.fetchall()}  # Conversion en set d'entiers
 
-    # On effectue la requête pour obtenir les identifiants des saisons déjà dans la base hormis la saison en cours
-    cursor.execute("""SELECT DISTINCT s.id_season FROM season s JOIN info_match im ON s.id_season = im.id_season JOIN info_goal ig ON im.id_match = ig.id_match  WHERE s.season_name NOT LIKE '%24/25%' AND s.season_name NOT LIKE '%2024/25%';
-    """)
+    # On effectue la requête pour obtenir les identifiants des matchs dejà dans la base
+    cursor.execute("SELECT DISTINCT s.id_season FROM season s JOIN info_match im ON s.id_season = im.id_season WHERE s.season_name NOT LIKE '%24/25%' AND s.season_name NOT LIKE '%2024/25%';")
     not_current_season_and_already_stored = {row[0] for row in cursor.fetchall()}  # Conversion en set d'entiers
 
     return conn, supabase, info_matchs, info_matchs_goal, not_current_season_and_already_stored
@@ -710,6 +693,6 @@ def scrape_and_store_goals():
 
 # Exécuter la fonction
 if __name__ == "__main__":
-    scrape_and_store_seasons()
+    #scrape_and_store_seasons()
     #scrape_and_store_matches()
-    #scrape_and_store_goals()
+    scrape_and_store_goals()
