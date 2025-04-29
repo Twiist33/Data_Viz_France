@@ -5475,13 +5475,13 @@ def season_analysis():
                                 # Apply style
                                 style_df_distrib_goals_scored = (
                                     df_distrib_goals_scored.style
-                                    .format({col: "{:.2f}" for col in distrib_goals_scored_columns[1:]})
+                                    .format({col: format_value for col in distrib_goals_scored_columns[1:]})  # Format personnalisé
                                     .set_properties(**{"text-align": "center"})
                                 )
 
                                 style_df_distrib_goals_conceded = (
                                     df_distrib_goals_conceded.style
-                                    .format({col: "{:.2f}" for col in distrib_goals_conceded_columns[1:]})
+                                    .format({col: format_value for col in distrib_goals_conceded_columns[1:]})  # Format personnalisé
                                     .set_properties(**{"text-align": "center"})
                                 )
 
