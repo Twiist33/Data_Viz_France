@@ -1,5 +1,6 @@
 ![Image quality](image/logo_1.jpg)
 
+### Français
 
 # Projet de data visualisation sur les championnat français
 
@@ -18,6 +19,24 @@ Plusieurs fonctionnalités seront disponibles au sein de cette application web :
 - 📅 Analyse d'une Saison : Aperçu des tendances sur une saison entière
 - 🏆 Analyse d'une Compétition : Comparaison des indicateurs statistiques pour les compétitions de votre choix
 
+### English
+
+# Data visualization project on the French championships
+
+The objective of this project is to continue the work carried out during my M1 dissertation: Comparative analysis of 3 factors of performance in football: the impact of the 1st goal, the time distribution of goals and the influence of the advantage of the field on the match  (home/away) between youth teams (U17N and U19N).
+As this dissertation focuses on only 3 competitions in the 2022/2023 season, it seemed important to me to expand this analysis by expanding the number of competitions and seasons.  
+Thus, the analysis will take into account recent seasons ranging from 2021/2022 to 2024/2025 (where possible) and the following competitions: Ligue 1, Ligue 2, National 1, National 2, Championnat U19N, D1 Féminine and D2 Féminine.
+
+The project is available at this link: https://datavizfrance-romain-traboul.streamlit.app/
+
+# To do
+
+Several features will be available within this web application: 
+
+- 📊 Analysis of a team: Analysis of the club of your choice through several statistics
+- 🥊 Team Confrontation: Comparative analysis between 2 teams of your choice from the same season
+- 📅 Season Analysis: Overview of trends over an entire season
+- 🏆 Analysis of a competition: Comparison of statistical indicators for the competitions of your choice
 <br/><br/>
 
 ![Image quality](image/photo_equipe.jpg)
