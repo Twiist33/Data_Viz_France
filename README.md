@@ -39,11 +39,11 @@ Several features will be available within this web application:
 - 🏆 Analysis of a competition: Comparison of statistical indicators for the competitions of your choice
 <br/><br/>
 
-![Image quality](image/photo_equipe.jpg)
+![Image quality](image/photo_equipe_eng.jpg)
 
-![Image quality](image/photo_confrontation_equipe.jpg)
+![Image quality](image/photo_confrontation_equipe_eng.jpg)
 
-![Image quality](image/photo_saison.jpg)
+![Image quality](image/photo_saison_eng.jpg)
 
-![Image quality](image/photo_competition.jpg)
+![Image quality](image/photo_competition_eng.jpg)
 
