@@ -228,7 +228,7 @@ def scrape_and_store_seasons():
                 print("Aucune bannière de cookies détectée.")
     
             # Boucler sur les saisons ciblées
-            targeted_seasons = ["24/25", "23/24", "22/23", "21/22","2024/25"]
+            targeted_seasons = ["25/26","24/25", "23/24", "22/23", "21/22","2024/25"]
     
             season_found = False  # Flag pour savoir si on trouve une saison valide
     
